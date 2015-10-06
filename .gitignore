@@ -1,0 +1,8 @@
+.DS_Store
+*.o
+build/
+Build/
+xcuserdata/
+project.xcworkspace/
+mulle-xcode-settings.xcodeproj/nat.pbxuser
+mulle-xcode-settings.xcodeproj/nat.perspectivev3
