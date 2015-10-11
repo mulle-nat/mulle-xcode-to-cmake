@@ -276,9 +276,9 @@ static int   _main( int argc, const char * argv[])
    arguments = [[NSProcessInfo processInfo] arguments];
    n         = [arguments count];
    
-   if( [arguments containsObject:@"-version"])
+   if( [arguments containsObject:@"-v"] || [arguments containsObject:@"--version"] || [arguments containsObject:@"-version"])
    {
-      fprintf( stderr, "v%.1f\n", CURRENT_PROJECT_VERSION);
+      fprintf( stderr, "v%s\n", CURRENT_PROJECT_VERSION);
       return( 0);
    }
    
