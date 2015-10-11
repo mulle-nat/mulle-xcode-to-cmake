@@ -13,6 +13,14 @@ that target for that configuration.
 
 This is basically a stripped down version of mulle_xcode_utility.
 
+### Releasenotes
+
+
+1.0.1 
+
+	Fixed a crasher due to multi-value settings
+
+
 ### Author
 
 Coded by Nat!

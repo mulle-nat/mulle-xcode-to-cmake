@@ -95,39 +95,65 @@ static void  fail( NSString *format, ...)
 }
 
 
-static void   hackit( XCBuildConfiguration *xcconfiguration, enum Command cmd,  NSString *key, NSString *value)
+static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, id value, NSMutableDictionary *settings, id prevValue)
 {
-   NSMutableDictionary   *settings;
-   NSString              *prevValue;
-   NSRange               range;
-   NSRange               range2;
+   NSEnumerator  *rover;
+   NSString      *s;
    
-   settings  = [[[xcconfiguration buildSettings] mutableCopy] autorelease];
-   prevValue = [settings objectForKey:key];
-   range     = [prevValue rangeOfString:value];
+   if( cmd == Add || cmd == Remove)
+      prevValue = [[prevValue mutableCopy] autorelease];
+   
+   switch( cmd)
+   {
+   case Add    :
+      if( [prevValue containsObject:value])
+         return;
+
+      [prevValue addObject:value];
+      value = prevValue;
+      break;
+         
+   case Set:
+      value = [NSArray arrayWithObject:value];
+      break;
+         
+   case Remove :
+      [prevValue removeObject:value];
+      value = prevValue;
+      break;
+   }
+
+   if( [value count])
+      [settings setObject:value
+                   forKey:key];
+   else
+      [settings removeObjectForKey:key];
+   
+   [xcconfiguration setObject:settings
+                       forKey:@"buildSettings"];
+}
+
+
+static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command cmd,  NSString *key, NSString *value, NSMutableDictionary *settings, NSString *prevValue)
+{
+   NSRange   range;
+   NSRange   range2;
+   
+   range = [prevValue rangeOfString:value];
    
    switch( cmd)
    {
    case Add    :
       if( range.length != 0)
          return;
-         
-      if( [prevValue length])
-      {
-         prevValue = [prevValue stringByAppendingString:@" "];
-         value = [prevValue stringByAppendingString:value];
-      }
-         
    case Set:
       break;
          
    case Remove :
-      range2 = [prevValue rangeOfString:[@" " stringByAppendingString:value]];
-      if( range2.length)
-         range = range2;
-      
-      value = [prevValue stringByReplacingCharactersInRange:range
-                                                 withString:@""];
+      if( range.length != [prevValue length])
+         return;
+
+      value = nil;
       break;
    }
 
@@ -139,6 +165,22 @@ static void   hackit( XCBuildConfiguration *xcconfiguration, enum Command cmd,  
    
    [xcconfiguration setObject:settings
                        forKey:@"buildSettings"];
+}
+
+
+static void   hackit( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, NSString *value)
+{
+   NSMutableDictionary   *settings;
+   id                    prevValue;
+   
+   settings  = [[[xcconfiguration buildSettings] mutableCopy] autorelease];
+   prevValue = [settings objectForKey:key];
+   if( [prevValue isKindOfClass:[NSArray class]])
+   {
+      hackit_array( xcconfiguration, cmd, key, value, settings, prevValue);
+      return;
+   }
+   hackit_string( xcconfiguration, cmd, key, value, settings, prevValue);
 }
 
 

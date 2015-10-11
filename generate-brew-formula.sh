@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/sh -x
 #
 # Generate a formula formulle-xcode-settings stand alone
 #
@@ -6,46 +6,75 @@ PROJECT=MulleXcodeSettings
 TARGET=mulle-xcode-settings
 HOMEPAGE="http://www.mulle-kybernetik.com/software/git/${TARGET}"
 DESC="change Xcode project build settings from the command line"
-VERSION="$1"
+AGVTAG="`agvtool what-version -terse 2> /dev/null`"
+
+VERSION="${1:-$AGVTAG}"
 shift
-ARCHIVEURL="$1"
+ARCHIVEURL="${1:-http://www.mulle-kybernetik.com/software/git/${TARGET}/tarball/$VERSION}"
 shift
 
-set -e
 
-[ "$VERSION" = "" ] && exit 1
-[ "$ARCHIVEURL" = "" ] && exit 1
+fail()
+{
+   echo "$@" >&2
+   exit 1
+}
+
+[ ! -z "$VERSION"  ]   || fail "no version"
+[ ! -z "$ARCHIVEURL" ] || fail "no archive url"
 
 
-TMPARCHIVE="/tmp/${PROJECT}-${VERSION}-archive"
+check_for_git_tag()
+{
+   git rev-parse "${VERSION}" >/dev/null 2>&1 || fail "No tag ${VERSION} found"
+}
 
-if [ ! -f  "${TMPARCHIVE}" ]
-then
-   curl -s -L -o "${TMPARCHIVE}" "${ARCHIVEURL}"
-   if [ $? -ne 0 -o ! -f "${TMPARCHIVE}" ]
+
+check_for_pristine_git_repo()
+{
+      local files
+   # allow project.pbxproj to be dirty.. because it's just too painful
+   # otherwise
+   files=`expr $(git status --porcelain 2>/dev/null| egrep "^(M| M|\?)" | egrep -v '.xcodeproj/project.pbxproj' | wc -l)`
+
+   [ $files -eq 0 ] || fail "GIT repository not in pristine state"
+}
+
+
+download_and_chksum_archive()
+{
+   TMPARCHIVE="/tmp/${PROJECT}-${VERSION}-archive"
+
+   if [ ! -f  "${TMPARCHIVE}" ]
    then
-      echo "Download failed" >&2
+      curl -L -o "${TMPARCHIVE}" "${ARCHIVEURL}"
+      if [ $? -ne 0 -o ! -f "${TMPARCHIVE}" ]
+      then
+         fail "Download failed"
+      fi
+   else
+      echo "using cached file \"${TMPARCHIVE}\" instead of downloading again" >&2
+   fi
+
+   #
+   # anything less than 17 KB is wrong
+   #
+   size="`du -k "${TMPARCHIVE}" | awk '{ print $ 1}'`"
+   if [ $size -lt 17 ]
+   then
+      echo "Archive truncated or missing" >&2
+      cat "${TMPARCHIVE}" >&2
+      rm "${TMPARCHIVE}"
       exit 1
    fi
-else
-   echo "using cached file ${TMPARCHIVE} instead of downloading again" >&2
-fi
 
-#
-# anything less than 17 KB is wrong
-#
-size="`du -k "${TMPARCHIVE}" | awk '{ print $ 1}'`"
-if [ $size -lt 17 ]
-then
-   echo "Archive truncated or missing" >&2
-   cat "${TMPARCHIVE}" >&2
-   rm "${TMPARCHIVE}"
-   exit 1
-fi
+   HASH="`shasum -p -a 256 "${TMPARCHIVE}" | awk '{ print $1 }'`"
+}
 
-HASH="`shasum -p -a 256 "${TMPARCHIVE}" | awk '{ print $1 }'`"
 
-cat <<EOF
+produce_rb_file()
+{
+   cat <<EOF
 class ${PROJECT} < Formula
   homepage "${HOMEPAGE}"
   desc "${DESC}"
@@ -67,3 +96,15 @@ class ${PROJECT} < Formula
 end
 # FORMULA ${TARGET}.rb
 EOF
+}
+
+
+main()
+{
+   check_for_git_tag
+   check_for_pristine_git_repo
+   download_and_chksum_archive
+   produce_rb_file
+}
+
+main
