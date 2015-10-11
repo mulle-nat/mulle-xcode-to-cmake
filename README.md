@@ -24,10 +24,13 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
+1.0.3
+
+	Fix moar compile problems that turned up in brew (why not earlier ?)
 
 1.0.2
 
-   Fix some compile problems that turned up in brew (why not earlier ?)
+	Fix some compile problems that turned up in brew (why not earlier ?)
 
 1.0.1
 

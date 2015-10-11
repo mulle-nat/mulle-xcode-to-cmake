@@ -1,4 +1,4 @@
-#! /bin/sh -x
+#! /bin/sh 
 #
 # Generate a formula formulle-xcode-settings stand alone
 #
