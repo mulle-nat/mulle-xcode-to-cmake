@@ -39,6 +39,7 @@ static void   usage()
            "\t-target <target>               : target to set\n"
            "\n"
            "Commands:\n"
+           "\tget     <key>                  : get value for key\n"
            "\tset     <key> <value>          : sets key to value\n"
            "\tadd     <key> <value>          : adds value to key\n"
            "\tremove  <key> <value>          : removes value from key\n"
@@ -61,6 +62,7 @@ static PBXTarget   *find_target_by_name( PBXProject *root, NSString *name)
    return( pbxtarget);
 }
 
+
 static XCBuildConfiguration  *find_configuration_by_name( PBXObjectWithConfigurationList *root, NSString *name)
 {
    NSEnumerator            *rover;
@@ -77,6 +79,7 @@ static XCBuildConfiguration  *find_configuration_by_name( PBXObjectWithConfigura
 
 enum Command
 {
+   Get,
    Set,
    Add,
    Remove
@@ -100,11 +103,15 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
    NSEnumerator  *rover;
    NSString      *s;
    
-   if( cmd == Add || cmd == Remove)
+   if( cmd != Set)
       prevValue = [[prevValue mutableCopy] autorelease];
    
    switch( cmd)
    {
+   case Get:
+      printf( "%s\n", prevValue ? [[prevValue description] cString] : "<null>");
+      return;
+         
    case Add    :
       if( [prevValue containsObject:value])
          return;
@@ -112,7 +119,7 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
       [prevValue addObject:value];
       value = prevValue;
       break;
-         
+
    case Set:
       value = [NSArray arrayWithObject:value];
       break;
@@ -143,6 +150,10 @@ static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command
    
    switch( cmd)
    {
+   case Get:
+      printf( "%s\n", prevValue ? [[prevValue description] cString] : "<null>");
+      return;
+
    case Add    :
       if( range.length != 0)
          return;
@@ -205,6 +216,7 @@ static void   setting_hack( PBXProject *root, enum Command cmd, NSString *key, N
       xcconfiguration = find_configuration_by_name( obj, configuration);
       if( ! xcconfiguration)
          fail( @"configuration \"%@\" not found", configuration);
+
       hackit( xcconfiguration, cmd, key, value);
       return;
    }
@@ -316,13 +328,23 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
-      if( ++i >= n - 1)
+      if( ++i >= n)
          usage();
       
       key   = [arguments objectAtIndex:i];
-      value = [arguments objectAtIndex:++i];
 
       // commands
+      if( [s isEqualToString:@"get"])
+      {
+         setting_hack( root, Get, key, nil, configuration, target);
+         continue;
+      }
+
+      if( ++i >= n)
+         usage();
+
+      value = [arguments objectAtIndex:i];
+
       if( [s isEqualToString:@"set"])
       {
          setting_hack( root, Set, key, value, configuration, target);
