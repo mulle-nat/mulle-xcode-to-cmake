@@ -27,6 +27,7 @@
 #import "MullePBXUnarchiver.h"
 #import "PBXObject.h"
 
+static BOOL   verbose;
 
 static void   usage()
 {
@@ -37,6 +38,7 @@ static void   usage()
            ""
            "\t-configuration <configuration> : configuration to set\n"
            "\t-target <target>               : target to set\n"
+           "\t-alltargets                    : set on all targets\n"
            "\n"
            "Commands:\n"
            "\tget     <key>                  : get value for key\n"
@@ -44,6 +46,10 @@ static void   usage()
            "\tadd     <key> <value>          : adds value to key\n"
            "\tinsert  <key> <value>          : inserts value in front of key\n"
            "\tremove  <key> <value>          : removes value from key\n"
+           "\treplace <key> <old> <value>    : replace old value for key (if exists)\n"
+           "\n"
+           "Environment:\n"
+           "VERBOSE                          : dump some info to stderr\n"
          );
    
    exit( 1);
@@ -80,11 +86,12 @@ static XCBuildConfiguration  *find_configuration_by_name( PBXObjectWithConfigura
 
 enum Command
 {
-   Get,
-   Set,
    Add,
+   Get,
    Insert,
-   Remove
+   Remove,
+   Replace,
+   Set
 };
 
 
@@ -100,11 +107,14 @@ static void  fail( NSString *format, ...)
 }
 
 
-static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, id value, NSMutableDictionary *settings, id prevValue)
+static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, id value, id old, NSMutableDictionary *settings, id prevValue)
 {
    NSEnumerator  *rover;
    NSString      *s;
+   NSUInteger    index;
    
+   NSCParameterAssert( [prevValue isKindOfClass:[NSArray class]]);
+
    if( cmd != Set)
       prevValue = [[prevValue mutableCopy] autorelease];
    
@@ -116,7 +126,17 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
          
    case Add    :
       if( [prevValue containsObject:value])
+      {
+         if( verbose)
+            fprintf( stderr, "value is already present\n");
          return;
+      }
+
+      if( verbose)
+         fprintf( stderr, "adding %s to %s for key %s\n",
+               [[value description] UTF8String],
+               [[prevValue description] UTF8String],
+               [key UTF8String]);
 
       [prevValue addObject:value];
       value = prevValue;
@@ -124,7 +144,17 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
 
    case Insert :
       if( [prevValue containsObject:value])
+      {
+         if( verbose)
+            fprintf( stderr, "value is already present\n");
          return;
+      }
+
+      if( verbose)
+         fprintf( stderr, "insert %s into %s for key %s\n",
+               [[value description] UTF8String],
+               [[prevValue description] UTF8String],
+               [key UTF8String]);
 
       [prevValue insertObject:value
                       atIndex:0];
@@ -133,9 +163,47 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
 
    case Set:
       value = [NSArray arrayWithObject:value];
+      if( verbose)
+         fprintf( stderr, "set %s for key %s\n",
+               [[value description] UTF8String],
+               [key UTF8String]);
+      break;
+
+   case Replace :
+      index = [prevValue indexOfObject:old];
+      if( index == NSNotFound)
+      {
+         if( verbose)
+            fprintf( stderr, "old value is not present\n");
+         return;
+      }
+   
+      if( verbose)
+         fprintf( stderr, "replace %s with %s from %s for key %s\n",
+               [[old description] UTF8String],
+               [[value description] UTF8String],
+               [[prevValue description] UTF8String],
+               [key UTF8String]);
+         
+      [prevValue replaceObjectAtIndex:index
+                           withObject:value];
+      value = prevValue;
       break;
          
    case Remove :
+      if( ! [prevValue containsObject:value])
+      {
+         if( verbose)
+            fprintf( stderr, "value is not present\n");
+         return;
+      }
+
+      if( verbose)
+         fprintf( stderr, "remove %s from %s for key %s\n",
+               [[value description] UTF8String],
+               [[prevValue description] UTF8String],
+               [key UTF8String]);
+   
       [prevValue removeObject:value];
       value = prevValue;
       break;
@@ -152,7 +220,7 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
 }
 
 
-static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command cmd,  NSString *key, id value, NSMutableDictionary *settings, NSString *prevValue)
+static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command cmd,  NSString *key, id value, id old, NSMutableDictionary *settings, NSString *prevValue)
 {
    NSRange   range;
    NSRange   range2;
@@ -179,28 +247,98 @@ static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command
       if( prevValue)
       {
          if( range.length == [prevValue length])  // or what ?
+         {
+            if( verbose)
+               fprintf( stderr, "value already set\n");
             return;
+         }
+
+         if( verbose)
+            fprintf( stderr, "add %s after %s for key %s\n",
+                  [[value description] UTF8String],
+                  [[prevValue description] UTF8String],
+                  [key UTF8String]);
       
          if( value)
+         {
             value = [NSArray arrayWithObjects:prevValue, value, nil];
+            if( verbose)
+               fprintf( stderr, "promoting to array\n");
+         }
+         break;
       }
-   case Set:
+      if( verbose)
+         fprintf( stderr, "set %s for key %s\n",
+                  [[value description] UTF8String],
+                  [key UTF8String]);
       break;
          
    case Insert  :
       if( prevValue)
       {
          if( range.length == [prevValue length])  // or what ?
+         {
+            if( verbose)
+               fprintf( stderr, "value already set\n");
             return;
+         }
       
+         if( verbose)
+            fprintf( stderr, "insert %s before %s for key %s\n",
+                  [[value description] UTF8String],
+                  [[prevValue description] UTF8String],
+                  [key UTF8String]);
          if( value)
+         {
             value = [NSArray arrayWithObjects:value, prevValue, nil];
+            if( verbose)
+               fprintf( stderr, "promoting to array\n");
+         }
+         break;
       }
+      // fall thru
+   case Set:
+      if( verbose)
+         fprintf( stderr, "set %s for key %s\n",
+                  [[value description] UTF8String],
+                  [key UTF8String]);
+      break;
+
+   case Replace :
+      if( ! prevValue)
+      {
+         if( verbose)
+            fprintf( stderr, "nothing to replace\n");
+         return;
+      }
+
+      range = [prevValue rangeOfString:old];
+      if( range.length != [prevValue length])
+      {
+         if( verbose)
+            fprintf( stderr, "old value doesnt match\n");
+         return;
+      }
+
+      if( verbose)
+         fprintf( stderr, "replace %s with %s for key %s\n",
+               [[old description] UTF8String],
+               [[value description] UTF8String],
+               [key UTF8String]);
       break;
       
    case Remove :
       if( range.length != [prevValue length])
+      {
+         if( verbose)
+            fprintf( stderr, "value doesnt match\n");
          return;
+      }
+      
+      if( verbose)
+         fprintf( stderr, "remove %s for key %s\n",
+               [[value description] UTF8String],
+               [key UTF8String]);
 
       value = nil;
       break;
@@ -217,23 +355,67 @@ static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command
 }
 
 
-static void   hackit( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, NSString *value)
+static void   hackit( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, NSString *value, NSString *old)
 {
    NSMutableDictionary   *settings;
    id                    prevValue;
    
+   if( verbose)
+      fprintf( stderr, "configuration: %s\n", [[xcconfiguration name] UTF8String]);
+   
    settings  = [[[xcconfiguration buildSettings] mutableCopy] autorelease];
    prevValue = [settings objectForKey:key];
+   
+   if( verbose)
+      fprintf( stderr, "old: %s = %s\n",
+          [key UTF8String], [[prevValue description] UTF8String]);
+   
    if( [prevValue isKindOfClass:[NSArray class]])
    {
-      hackit_array( xcconfiguration, cmd, key, value, settings, prevValue);
+      hackit_array( xcconfiguration, cmd, key, value, old, settings, prevValue);
       return;
    }
-   hackit_string( xcconfiguration, cmd, key, value, settings, prevValue);
+   hackit_string( xcconfiguration, cmd, key, value, old, settings, prevValue);
 }
 
 
-static void   setting_hack( PBXProject *root, enum Command cmd, NSString *key, NSString *value, NSString *configuration, NSString *target)
+static void   _setting_hack( PBXObjectWithConfigurationList *obj,
+                             enum Command cmd,
+                             NSString *key,
+                             NSString *value,
+                             NSString *old,
+                             NSString *configuration)
+{
+   PBXTarget              *pbxtarget;
+   XCBuildConfiguration   *xcconfiguration;
+   NSEnumerator           *rover;
+
+   if( verbose)
+      fprintf( stderr, "object: %s\n", [[obj name] UTF8String]);
+
+   if( configuration)
+   {
+      xcconfiguration = find_configuration_by_name( obj, configuration);
+      if( ! xcconfiguration)
+         fail( @"configuration \"%@\" not found", configuration);
+
+      hackit( xcconfiguration, cmd, key, value, old);
+      return;
+   }
+
+   rover = [[obj buildConfigurations] objectEnumerator];
+   while( xcconfiguration = [rover nextObject])
+      hackit( xcconfiguration, cmd, key, value, old);
+}
+
+
+static void   setting_hack( PBXProject *root,
+                            enum Command cmd,
+                            NSString *key,
+                            NSString *value,
+                            NSString *old,
+                            NSString *configuration,
+                            NSString *target)
 {
    PBXTarget                        *pbxtarget;
    XCBuildConfiguration             *xcconfiguration;
@@ -243,25 +425,21 @@ static void   setting_hack( PBXProject *root, enum Command cmd, NSString *key, N
    obj = root;
    if( target)
    {
+      if( [target isEqualToString:@"##ALL##"])
+      {
+         rover = [[root targets] objectEnumerator];
+         while( pbxtarget = [rover nextObject])
+            _setting_hack( pbxtarget, cmd, key, value, old, configuration);
+         return;
+      }
+      
       pbxtarget = find_target_by_name( root, target);
       if( ! pbxtarget)
          fail( @"target \"%@\" not found", target);
       obj = pbxtarget;
    }
 
-   if( configuration)
-   {
-      xcconfiguration = find_configuration_by_name( obj, configuration);
-      if( ! xcconfiguration)
-         fail( @"configuration \"%@\" not found", configuration);
-
-      hackit( xcconfiguration, cmd, key, value);
-      return;
-   }
-
-   rover = [[obj buildConfigurations] objectEnumerator];
-   while( xcconfiguration = [rover nextObject])
-      hackit( xcconfiguration, cmd, key, value);
+   _setting_hack( obj, cmd, key, value, old, configuration);
 }
 
 
@@ -314,14 +492,18 @@ static int   _main( int argc, const char * argv[])
    NSString        *configuration;
    NSString        *file;
    NSString        *key;
+   NSString        *old;
    NSString        *s;
    NSString        *target;
    NSString        *value;
    id              root;
    unsigned int    i, n;
+   BOOL            allTargets;
    
    configuration = nil;
    target        = nil;
+   allTargets    = NO;
+   verbose       = getenv( "VERBOSE") ? YES : NO;
    
    arguments = [[NSProcessInfo processInfo] arguments];
    n         = [arguments count];
@@ -331,6 +513,9 @@ static int   _main( int argc, const char * argv[])
       fprintf( stderr, "v%s\n", CURRENT_PROJECT_VERSION);
       return( 0);
    }
+
+   if( [arguments containsObject:@"-h"] || [arguments containsObject:@"--help"] || [arguments containsObject:@"-help"])
+      usage();
    
    file = [arguments lastObject];
    if( ! --n)
@@ -365,45 +550,61 @@ static int   _main( int argc, const char * argv[])
          target = [arguments objectAtIndex:i];
          continue;
       }
-
-      if( ++i >= n)
-         usage();
       
-      key   = [arguments objectAtIndex:i];
-
-      // commands
-      if( [s isEqualToString:@"get"])
+      if( [s isEqualToString:@"-alltargets"])
       {
-         setting_hack( root, Get, key, nil, configuration, target);
+         target = @"##ALL##";
          continue;
       }
 
       if( ++i >= n)
          usage();
+      
+      key = [arguments objectAtIndex:i];
 
+      // commands
+      if( [s isEqualToString:@"get"])
+      {
+         setting_hack( root, Get, key, nil, nil, configuration, target);
+         continue;
+      }
+
+      if( ++i >= n)
+         usage();
       value = [arguments objectAtIndex:i];
 
       if( [s isEqualToString:@"set"])
       {
-         setting_hack( root, Set, key, value, configuration, target);
+         setting_hack( root, Set, key, value, nil, configuration, target);
          continue;
       }
       
       if( [s isEqualToString:@"add"])
       {
-         setting_hack( root, Add, key, value, configuration, target);
+         setting_hack( root, Add, key, value, nil, configuration, target);
          continue;
       }
 
       if( [s isEqualToString:@"insert"])
       {
-         setting_hack( root, Insert, key, value, configuration, target);
+         setting_hack( root, Insert, key, value, nil, configuration, target);
+         continue;
+      }
+
+      if( [s isEqualToString:@"remove"])
+      {
+         setting_hack( root, Remove, key, value, nil, configuration, target);
          continue;
       }
       
-      if( [s isEqualToString:@"remove"])
+      if( ++i >= n)
+         usage();
+      old   = value;
+      value = [arguments objectAtIndex:i];
+
+      if( [s isEqualToString:@"replace"])
       {
-         setting_hack( root, Remove, key, value, configuration, target);
+         setting_hack( root, Replace, key, value, old, configuration, target);
          continue;
       }
       

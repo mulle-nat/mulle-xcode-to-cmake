@@ -17,6 +17,7 @@ usage: mulle-xcode-settings [options] <commands> <file.xcodeproj>
 Options:
    -configuration <configuration> : configuration to set
    -target <target>               : target to set
+   -alltargets                    : set on all targets
 
 Commands:
    get     <key>                  : get value for key
@@ -24,6 +25,7 @@ Commands:
    add     <key> <value>          : adds value to key
    insert  <key> <value>          : inserts value in front of key
    remove  <key> <value>          : removes value from key
+   replace <key> <old> <value>    : replace old value for key (if exists)
 ```
 
 ### Examples
@@ -39,6 +41,13 @@ mulle-xcode-settings remove HEADER_SEARCH_PATHS '/usr/local/include' ./X.xcodepr
 This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
+
+1.0.5
+=====
+
+* Added -alltargets
+* Added -help
+
 
 1.0.4
 =====
