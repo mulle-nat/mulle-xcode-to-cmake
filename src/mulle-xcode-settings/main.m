@@ -109,7 +109,7 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
    switch( cmd)
    {
    case Get:
-      printf( "%s\n", prevValue ? [[prevValue description] cString] : "<null>");
+      printf( "%s\n", prevValue ? [[prevValue description] UTF8String] : "<null>");
       return;
          
    case Add    :
@@ -141,22 +141,38 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
 }
 
 
-static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command cmd,  NSString *key, NSString *value, NSMutableDictionary *settings, NSString *prevValue)
+static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command cmd,  NSString *key, id value, NSMutableDictionary *settings, NSString *prevValue)
 {
    NSRange   range;
    NSRange   range2;
+   NSArray   *array;
    
-   range = [prevValue rangeOfString:value];
+   if( ! [prevValue length])
+      prevValue = nil;
+
+   if( ! [value length])
+   {
+      value = nil;
+      range = NSMakeRange( 0, 0);
+   }
+   else
+      range = [prevValue rangeOfString:value];
    
    switch( cmd)
    {
    case Get:
-      printf( "%s\n", prevValue ? [[prevValue description] cString] : "<null>");
+      printf( "%s\n", prevValue ? [[prevValue description] UTF8String] : "<null>");
       return;
 
    case Add    :
-      if( range.length != 0)
-         return;
+      if( prevValue)
+      {
+         if( range.length == [prevValue length])  // or what ?
+            return;
+      
+         if( value)
+            value = [NSArray arrayWithObjects:prevValue, value, nil];
+      }
    case Set:
       break;
          
@@ -168,7 +184,7 @@ static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command
       break;
    }
 
-   if( [value length])
+   if( value)
       [settings setObject:value
                    forKey:key];
    else

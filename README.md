@@ -24,8 +24,11 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
-1.0.3
+1.0.4
+	Adding a string to another string, creates a proper array of strings.
+        (If the string isn't a duplicate)
 
+1.0.3
 	Fix moar compile problems that turned up in brew (why not earlier ?)
 
 1.0.2
