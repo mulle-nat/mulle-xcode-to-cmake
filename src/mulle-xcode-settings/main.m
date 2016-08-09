@@ -42,6 +42,7 @@ static void   usage()
            "\tget     <key>                  : get value for key\n"
            "\tset     <key> <value>          : sets key to value\n"
            "\tadd     <key> <value>          : adds value to key\n"
+           "\tinsert  <key> <value>          : inserts value in front of key\n"
            "\tremove  <key> <value>          : removes value from key\n"
          );
    
@@ -82,6 +83,7 @@ enum Command
    Get,
    Set,
    Add,
+   Insert,
    Remove
 };
 
@@ -117,6 +119,15 @@ static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command 
          return;
 
       [prevValue addObject:value];
+      value = prevValue;
+      break;
+
+   case Insert :
+      if( [prevValue containsObject:value])
+         return;
+
+      [prevValue insertObject:value
+                      atIndex:0];
       value = prevValue;
       break;
 
@@ -164,7 +175,7 @@ static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command
       printf( "%s\n", prevValue ? [[prevValue description] UTF8String] : "<null>");
       return;
 
-   case Add    :
+   case Add :
       if( prevValue)
       {
          if( range.length == [prevValue length])  // or what ?
@@ -176,6 +187,17 @@ static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command
    case Set:
       break;
          
+   case Insert  :
+      if( prevValue)
+      {
+         if( range.length == [prevValue length])  // or what ?
+            return;
+      
+         if( value)
+            value = [NSArray arrayWithObjects:value, prevValue, nil];
+      }
+      break;
+      
    case Remove :
       if( range.length != [prevValue length])
          return;
@@ -370,6 +392,12 @@ static int   _main( int argc, const char * argv[])
       if( [s isEqualToString:@"add"])
       {
          setting_hack( root, Add, key, value, configuration, target);
+         continue;
+      }
+
+      if( [s isEqualToString:@"insert"])
+      {
+         setting_hack( root, Insert, key, value, configuration, target);
          continue;
       }
       

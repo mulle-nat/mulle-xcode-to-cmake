@@ -9,6 +9,22 @@ specify a configuration, the setting will be applied to all configurations.
 Therefore when you specify a target and a configuration only the setting in
 that target for that configuration is affected.
 
+## Usage
+
+```
+usage: mulle-xcode-settings [options] <commands> <file.xcodeproj>
+
+Options:
+   -configuration <configuration> : configuration to set
+   -target <target>               : target to set
+
+Commands:
+   get     <key>                  : get value for key
+   set     <key> <value>          : sets key to value
+   add     <key> <value>          : adds value to key
+   insert  <key> <value>          : inserts value in front of key
+   remove  <key> <value>          : removes value from key
+```
 
 ### Examples
 
@@ -25,19 +41,26 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 ### Releasenotes
 
 1.0.4
-	Adding a string to another string, creates a proper array of strings.
-        (If the string isn't a duplicate)
+=====
+
+* Adding a string to another string, creates a proper array of strings.
+        (If the string isn't a duplicate).
+        New command "insert" like add, but adds in front of previous value(s).
 
 1.0.3
-	Fix moar compile problems that turned up in brew (why not earlier ?)
+=====
+
+* Fix moar compile problems that turned up in brew (why not earlier ?)
 
 1.0.2
+=====
 
-	Fix some compile problems that turned up in brew (why not earlier ?)
+* Fix some compile problems that turned up in brew (why not earlier ?)
 
 1.0.1
+=====
 
-	Fixed a crasher due to multi-value settings
+* Fixed a crasher due to multi-value settings
 
 
 ### Author
