@@ -1,3 +1,6 @@
 language: objective-c
 
-script: xcodebuild -alltargets
+script: xcodebuild -alltargets DSTROOT=/tmp INSTALL_PATH=/bin
+
+after_build:  /tmp/bin/mulle-xcode-settings list mulle-xcode-settings.xcodeproj
+
