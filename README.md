@@ -9,9 +9,9 @@ specify a configuration, the setting will be applied to all configurations.
 Therefore when you specify a target and a configuration only the setting in
 that target for that configuration is affected.
 
-Fork      |  Build Status | Release Version
+Fork      |  Build Status | Master Version
 ----------|---------------|-----------------------------------
-[Mulle kybernetiK](//github.com/mulle-nat/mulle-xcode-settings) | [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=release)](https://travis-ci.org/mulle-nat/mulle-xcode-settings) | ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-nat/mulle-xcode-settings.svg) [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=release)](https://travis-ci.org/mulle-nat/mulle-xcode-settings)
+[Mulle kybernetiK](//github.com/mulle-nat/mulle-xcode-settings) | [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-settings) | ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-nat/mulle-xcode-settings.svg) [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-settings)
 
 
 ## Install
