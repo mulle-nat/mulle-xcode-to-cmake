@@ -14,27 +14,37 @@ Fork      |  Build Status | Release Version
 [Mulle kybernetiK](//github.com/mulle-nat/mulle-xcode-settings) | [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=release)](https://travis-ci.org/mulle-nat/mulle-xcode-settings) | ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-nat/mulle-xcode-settings.svg) [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=release)](https://travis-ci.org/mulle-nat/mulle-xcode-settings)
 
 
+## Install
+
+Use the [homebrew](//brew.sh) package manager to install it, or build
+it yourself with Xcode:
+
+```
+brew install mulle-kybernetik/software/mulle-xcode-settings
+```
+
+
 ## Usage
 
 ```
 usage: mulle-xcode-settings [options] <commands> <file.xcodeproj>
 
 Options:
--c <configuration>          : configuration to set
--t <target>                 : target to set
--a                          : set on all targets
+   -c <configuration>          : configuration to set
+   -t <target>                 : target to set
+   -a                          : set on all targets
 
 Commands:
-list                        : list all keys
-get     <key>               : get value for key
-set     <key> <value>       : sets key to value
-add     <key> <value>       : adds value to key
-insert  <key> <value>       : inserts value in front of key
-remove  <key> <value>       : removes value from key
-replace <key> <old> <value> : replace old value for key (if exists)
+   list                        : list all keys
+   get     <key>               : get value for key
+   set     <key> <value>       : sets key to value
+   add     <key> <value>       : adds value to key
+   insert  <key> <value>       : inserts value in front of key
+   remove  <key> <value>       : removes value from key
+   replace <key> <old> <value> : replace old value for key (if exists)
 
 Environment:
-VERBOSE                     : dump some info to stderr
+   VERBOSE                     : dump some info to stderr
 ```
 
 ### Examples
@@ -69,7 +79,7 @@ Project:
 
 List all non-default project settings for target `mullepbx`:
 
-```
+```console
 $ mulle-xcode-settings -t mullepbx list mulle-xcode-settings.xcodeproj
 mullepbx:
    Debug:
@@ -82,7 +92,7 @@ mullepbx:
 
 Change a setting in target `mullepbx` for configuration **Release**:
 
-```
+```console
 $ mulle-xcode-settings -t mullepbx -c Debug set PRODUCT_NAME 'My Foo' mulle-xcode-settings.xcodeproj
 ```
 
@@ -102,47 +112,41 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
-1.1.0
-=====
+#### 1.1.0
 
 * Added **list** command, which makes `mulle-xcode-settings` easier to use.
 
-1.0.6
-=====
+
+#### 1.0.6
 
 * Changed option handling to -<short> and --<long> (but keep old flags for
   compatibility.
 
 
-1.0.5
-=====
+#### 1.0.5
 
 * Added -alltargets
 * Added -help
 
 
-1.0.4
-=====
+#### 1.0.4
 
 * Adding a string to another string, creates a proper array of strings.
         (If the string isn't a duplicate).
         New command "insert" like add, but adds in front of previous value(s).
 
 
-1.0.3
-=====
+#### 1.0.3
 
 * Fix moar compile problems that turned up in brew (why not earlier ?)
 
 
-1.0.2
-=====
+#### 1.0.2
 
 * Fix some compile problems that turned up in brew (why not earlier ?)
 
 
-1.0.1
-=====
+#### 1.0.1
 
 * Fixed a crasher due to multi-value settings
 

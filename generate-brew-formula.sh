@@ -1,11 +1,11 @@
-#! /bin/sh 
+#! /bin/sh
 #
 # Generate a formula formulle-xcode-settings stand alone
 #
 PROJECT=MulleXcodeSettings
 TARGET=mulle-xcode-settings
 HOMEPAGE="http://www.mulle-kybernetik.com/software/git/${TARGET}"
-DESC="change Xcode project build settings from the command line"
+DESC="Edit Xcode build settings from the command line"
 AGVTAG="`agvtool what-version -terse 2> /dev/null`"
 
 VERSION="${1:-$AGVTAG}"

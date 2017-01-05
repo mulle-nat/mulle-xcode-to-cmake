@@ -1,716 +1,448 @@
 // !$*UTF8*$!
 {
-    archiveVersion = 1;
-    classes =     (
-    );
-    objectVersion = 42;
-    objects =     {
-        08FB7793FE84155DC02AAC07 =         {
-            attributes =             {
-                TargetAttributes =                 {
-                    416712311BC3D45500B39688 =                     {
-                        CreatedOnToolsVersion = "6.4";
-                    };
-                    4167125A1BC3D8BB00B39688 =                     {
-                        CreatedOnToolsVersion = "6.4";
-                    };
-                };
-            };
-            buildConfigurationList = 1DEB927808733DD40010E9CD;
-            compatibilityVersion = "Xcode 2.4";
-            developmentRegion = English;
-            hasScannedForEncodings = 1;
-            isa = PBXProject;
-            knownRegions =             (
-                English,
-                Japanese,
-                French,
-                German
-            );
-            mainGroup = 08FB7794FE84155DC02AAC07;
-            projectDirPath = "";
-            projectReferences =             (
-                                {
-                    ProductGroup = 411FA53712DA483B005C2979;
-                    ProjectRef = 08FB779EFE84155DC02AAC07;
-                }
-            );
-            projectRoot = "";
-            targets =             (
-                4167125A1BC3D8BB00B39688,
-                416712311BC3D45500B39688
-            );
-        };
-        08FB7794FE84155DC02AAC07 =         {
-            children =             (
-                41D6EA0D1D61E22D00221D7A,
-                41795C0F1BCA80CC00CEB1CE,
-                41F6FBB51BC40248000C60B2,
-                08FB779DFE84155DC02AAC07,
-                1AB674ADFE9D54B511CA2CBB
-            );
-            isa = PBXGroup;
-            name = MulleXcodeToMake;
-            project = 08FB7793FE84155DC02AAC07;
-            sourceTree = "<group>";
-        };
-        08FB779DFE84155DC02AAC07 =         {
-            children =             (
-                411FA53A12DA484F005C2979
-            );
-            isa = PBXGroup;
-            name = "External Frameworks and Libraries";
-            sourceTree = "<group>";
-        };
-        08FB779EFE84155DC02AAC07 =         {
-            isa = PBXFileReference;
-            lastKnownFileType = "wrapper.framework";
-            sourceTree = "<absolute>";
-        };
-        1AB674ADFE9D54B511CA2CBB =         {
-            children =             (
-                416712321BC3D45500B39688,
-                4167125B1BC3D8BB00B39688
-            );
-            isa = PBXGroup;
-            name = Products;
-            sourceTree = "<group>";
-        };
-        1DEB927808733DD40010E9CD =         {
-            buildConfigurations =             (
-                1DEB927908733DD40010E9CD,
-                1DEB927A08733DD40010E9CD
-            );
-            defaultConfigurationIsVisible = 0;
-            defaultConfigurationName = Release;
-            isa = XCConfigurationList;
-        };
-        1DEB927908733DD40010E9CD =         {
-            buildSettings =             {
-                "CLANG_WARN_DIRECT_OBJC_ISA_USAGE" = NO;
-                "CURRENT_PROJECT_VERSION" = "1.1.0";
-                "DEBUG_INFORMATION_FORMAT" = dwarf;
-                "DYLIB_COMPATIBILITY_VERSION" = "$(CURRENT_PROJECT_VERSION)";
-                "DYLIB_CURRENT_VERSION" = "1.0.0";
-                "GCC_OPTIMIZATION_LEVEL" = 0;
-                "MACOSX_DEPLOYMENT_TARGET" = "10.4";
-                "OTHER_CFLAGS" = "-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"";
-            };
-            isa = XCBuildConfiguration;
-            name = Debug;
-        };
-        1DEB927A08733DD40010E9CD =         {
-            buildSettings =             {
-                "CLANG_WARN_DIRECT_OBJC_ISA_USAGE" = NO;
-                "CURRENT_PROJECT_VERSION" = "1.1.0";
-                "DEBUG_INFORMATION_FORMAT" = dwarf;
-                "DYLIB_COMPATIBILITY_VERSION" = "$(CURRENT_PROJECT_VERSION)";
-                "DYLIB_CURRENT_VERSION" = "1.0.0";
-                "GCC_GENERATE_DEBUGGING_SYMBOLS" = NO;
-                "MACOSX_DEPLOYMENT_TARGET" = "10.4";
-                "OTHER_CFLAGS" = "-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"";
-            };
-            isa = XCBuildConfiguration;
-            name = Release;
-        };
-        4101507114431CD70019AB2E =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "PBXProjectProxy.h";
-            sourceTree = "<group>";
-        };
-        4101507214431CD70019AB2E =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "PBXProjectProxy.m";
-            sourceTree = "<group>";
-        };
-        410F609412C80F79007EA949 =         {
-            children =             (
-                41786CAB12C7B6680010EB6D,
-                41786CAC12C7B6680010EB6D,
-                41786C9812C7B2840010EB6D,
-                41786C9912C7B2840010EB6D,
-                41786C9B12C7B2F20010EB6D,
-                41786C9C12C7B2F20010EB6D,
-                4101507114431CD70019AB2E,
-                4101507214431CD70019AB2E,
-                4121674E12D897FB00D49F14,
-                4121674F12D897FB00D49F14,
-                41F6FBB81BC4037D000C60B2,
-                41F6FBB91BC4037D000C60B2
-            );
-            isa = PBXGroup;
-            name = PBXReading;
-            path = "src/PBXReading";
-            sourceTree = "<group>";
-        };
-        410F65C512C90A6D007EA949 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "PBXProject+Settings.h";
-            sourceTree = "<group>";
-        };
-        410F65C612C90A6D007EA949 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "PBXProject+Settings.m";
-            sourceTree = "<group>";
-        };
-        411FA53712DA483B005C2979 =         {
-            children =             (
-            );
-            isa = PBXGroup;
-            name = Products;
-            sourceTree = "<group>";
-        };
-        411FA53A12DA484F005C2979 =         {
-            isa = PBXFileReference;
-            lastKnownFileType = "wrapper.framework";
-            name = "Foundation.framework";
-            path = "/System/Library/Frameworks/Foundation.framework";
-            sourceTree = "<absolute>";
-        };
-        4121674E12D897FB00D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "NSString+KeyFromSetterSelector.h";
-            sourceTree = "<group>";
-        };
-        4121674F12D897FB00D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "NSString+KeyFromSetterSelector.m";
-            sourceTree = "<group>";
-        };
-        412167B212D89ED100D49F14 =         {
-            children =             (
-                412167B312D89EF700D49F14,
-                412167B412D89EF700D49F14,
-                4121697A12D8B42500D49F14,
-                4121697B12D8B42500D49F14,
-                412167BB12D8A57E00D49F14,
-                412167BC12D8A57E00D49F14
-            );
-            isa = PBXGroup;
-            name = PBXWriting;
-            path = "src/PBXWriting";
-            sourceTree = "<group>";
-        };
-        412167B312D89EF700D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "MullePBXArchiver.h";
-            sourceTree = "<group>";
-        };
-        412167B412D89EF700D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "MullePBXArchiver.m";
-            sourceTree = "<group>";
-        };
-        412167BB12D8A57E00D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "PBXObject+PBXEncoding.h";
-            sourceTree = "<group>";
-        };
-        412167BC12D8A57E00D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "PBXObject+PBXEncoding.m";
-            sourceTree = "<group>";
-        };
-        4121697A12D8B42500D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "MulleSortedKeyDictionary.h";
-            sourceTree = "<group>";
-        };
-        4121697B12D8B42500D49F14 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "MulleSortedKeyDictionary.m";
-            sourceTree = "<group>";
-        };
-        4138C84C12DA2F5400980090 =         {
-            children =             (
-                41786F9B12C7E08F0010EB6D,
-                41786F9C12C7E08F0010EB6D,
-                415CE1641487CAD300578330,
-                415CE1651487CAD300578330,
-                410F65C512C90A6D007EA949,
-                410F65C612C90A6D007EA949,
-                418C5D6713AE2C9900E14843,
-                418C5D6813AE2CAF00E14843
-            );
-            isa = PBXGroup;
-            name = PBXSupport;
-            path = "src/PBXSupport";
-            sourceTree = "<group>";
-        };
-        415CE1641487CAD300578330 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "PBXTarget+HierarchyAndPaths.h";
-            sourceTree = "<group>";
-        };
-        415CE1651487CAD300578330 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "PBXTarget+HierarchyAndPaths.m";
-            sourceTree = "<group>";
-        };
-        4167122E1BC3D45500B39688 =         {
-            buildActionMask = 2147483647;
-            files =             (
-                416712521BC3D49E00B39688,
-                4167124A1BC3D49200B39688,
-                416712541BC3D49E00B39688,
-                4167124E1BC3D49200B39688,
-                416712561BC3D49E00B39688,
-                416712501BC3D49200B39688,
-                4167124C1BC3D49200B39688,
-                4167126C1BC3E6FD00B39688,
-                41F6FBBC1BC4086D000C60B2
-            );
-            isa = PBXSourcesBuildPhase;
-            runOnlyForDeploymentPostprocessing = 0;
-        };
-        416712301BC3D45500B39688 =         {
-            buildActionMask = 2147483647;
-            files =             (
-                41F6FBAD1BC3FE8F000C60B2,
-                41F6FBB01BC3FE9D000C60B2,
-                41F6FBB21BC3FEA5000C60B2,
-                41F6FBAF1BC3FE99000C60B2,
-                41F6FBAE1BC3FE94000C60B2,
-                41F6FBB11BC3FEA1000C60B2,
-                41F6FBBD1BC40874000C60B2,
-                41F6FBBB1BC40869000C60B2,
-                41F6FBB31BC3FEAB000C60B2
-            );
-            isa = PBXHeadersBuildPhase;
-            runOnlyForDeploymentPostprocessing = 0;
-        };
-        416712311BC3D45500B39688 =         {
-            buildConfigurationList = 416712471BC3D45500B39688;
-            buildPhases =             (
-                416712301BC3D45500B39688,
-                4167122E1BC3D45500B39688
-            );
-            buildRules =             (
-            );
-            dependencies =             (
-            );
-            isa = PBXNativeTarget;
-            name = mullepbx;
-            productName = mulleXcode;
-            productReference = 416712321BC3D45500B39688;
-            productType = "com.apple.product-type.library.static";
-        };
-        416712321BC3D45500B39688 =         {
-            explicitFileType = "archive.ar";
-            includeInIndex = 0;
-            isa = PBXFileReference;
-            path = "libmullepbx.a";
-            sourceTree = "BUILT_PRODUCTS_DIR";
-        };
-        416712431BC3D45500B39688 =         {
-            buildSettings =             {
-                "EXECUTABLE_PREFIX" = lib;
-                "PRODUCT_NAME" = "$(TARGET_NAME)";
-            };
-            isa = XCBuildConfiguration;
-            name = Debug;
-        };
-        416712441BC3D45500B39688 =         {
-            buildSettings =             {
-                "EXECUTABLE_PREFIX" = lib;
-                "PRODUCT_NAME" = "$(TARGET_NAME)";
-            };
-            isa = XCBuildConfiguration;
-            name = Release;
-        };
-        416712471BC3D45500B39688 =         {
-            buildConfigurations =             (
-                416712431BC3D45500B39688,
-                416712441BC3D45500B39688
-            );
-            defaultConfigurationIsVisible = 0;
-            defaultConfigurationName = Release;
-            isa = XCConfigurationList;
-        };
-        4167124A1BC3D49200B39688 =         {
-            fileRef = 41786CAC12C7B6680010EB6D;
-            isa = PBXBuildFile;
-        };
-        4167124C1BC3D49200B39688 =         {
-            fileRef = 41786C9912C7B2840010EB6D;
-            isa = PBXBuildFile;
-        };
-        4167124E1BC3D49200B39688 =         {
-            fileRef = 41786C9C12C7B2F20010EB6D;
-            isa = PBXBuildFile;
-        };
-        416712501BC3D49200B39688 =         {
-            fileRef = 4101507214431CD70019AB2E;
-            isa = PBXBuildFile;
-        };
-        416712521BC3D49E00B39688 =         {
-            fileRef = 412167B412D89EF700D49F14;
-            isa = PBXBuildFile;
-        };
-        416712541BC3D49E00B39688 =         {
-            fileRef = 4121697B12D8B42500D49F14;
-            isa = PBXBuildFile;
-        };
-        416712561BC3D49E00B39688 =         {
-            fileRef = 412167BC12D8A57E00D49F14;
-            isa = PBXBuildFile;
-        };
-        416712571BC3D8BB00B39688 =         {
-            buildActionMask = 2147483647;
-            files =             (
-                41795C101BCA80CC00CEB1CE,
-                4167125E1BC3D8BB00B39688
-            );
-            isa = PBXSourcesBuildPhase;
-            runOnlyForDeploymentPostprocessing = 0;
-        };
-        416712581BC3D8BB00B39688 =         {
-            buildActionMask = 2147483647;
-            files =             (
-                41D6EA0E1D61E22D00221D7A,
-                416712641BC3D8CF00B39688
-            );
-            isa = PBXFrameworksBuildPhase;
-            runOnlyForDeploymentPostprocessing = 0;
-        };
-        416712591BC3D8BB00B39688 =         {
-            buildActionMask = 2147483647;
-            dstPath = "/usr/share/man/man1/";
-            dstSubfolderSpec = 0;
-            files =             (
-            );
-            isa = PBXCopyFilesBuildPhase;
-            runOnlyForDeploymentPostprocessing = 1;
-        };
-        4167125A1BC3D8BB00B39688 =         {
-            buildConfigurationList = 4167125F1BC3D8BB00B39688;
-            buildPhases =             (
-                416712571BC3D8BB00B39688,
-                416712581BC3D8BB00B39688,
-                416712591BC3D8BB00B39688
-            );
-            buildRules =             (
-            );
-            dependencies =             (
-                416712661BC3D8D900B39688
-            );
-            isa = PBXNativeTarget;
-            name = "mulle-xcode-settings";
-            productName = "mulle-xcode-settings";
-            productReference = 4167125B1BC3D8BB00B39688;
-            productType = "com.apple.product-type.tool";
-        };
-        4167125B1BC3D8BB00B39688 =         {
-            explicitFileType = "compiled.mach-o.executable";
-            includeInIndex = 0;
-            isa = PBXFileReference;
-            path = "mulle-xcode-settings";
-            sourceTree = "BUILT_PRODUCTS_DIR";
-        };
-        4167125C1BC3D8BB00B39688 =         {
-            children =             (
-                4167125D1BC3D8BB00B39688
-            );
-            isa = PBXGroup;
-            name = "mulle-xcode-settings";
-            path = "src/mulle-xcode-settings";
-            sourceTree = "<group>";
-        };
-        4167125D1BC3D8BB00B39688 =         {
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "main.m";
-            sourceTree = "<group>";
-        };
-        4167125E1BC3D8BB00B39688 =         {
-            fileRef = 4167125D1BC3D8BB00B39688;
-            isa = PBXBuildFile;
-        };
-        4167125F1BC3D8BB00B39688 =         {
-            buildConfigurations =             (
-                416712601BC3D8BB00B39688,
-                416712611BC3D8BB00B39688
-            );
-            defaultConfigurationIsVisible = 0;
-            defaultConfigurationName = Release;
-            isa = XCConfigurationList;
-        };
-        416712601BC3D8BB00B39688 =         {
-            buildSettings =             {
-                "CLANG_LINK_OBJC_RUNTIME" = NO;
-                "OTHER_LDFLAGS" =                 (
-                    "$(OTHER_LDFLAGS_PLATFORM)",
-                    "-all_load",
-                    "$(inherited)"
-                );
-                "PRODUCT_NAME" = "$(TARGET_NAME)";
-            };
-            isa = XCBuildConfiguration;
-            name = Debug;
-        };
-        416712611BC3D8BB00B39688 =         {
-            buildSettings =             {
-                "CLANG_LINK_OBJC_RUNTIME" = NO;
-                "OTHER_LDFLAGS" =                 (
-                    "$(OTHER_LDFLAGS_PLATFORM)",
-                    "-all_load",
-                    "$(inherited)"
-                );
-                "PRODUCT_NAME" = "$(TARGET_NAME)";
-            };
-            isa = XCBuildConfiguration;
-            name = Release;
-        };
-        416712641BC3D8CF00B39688 =         {
-            fileRef = 416712321BC3D45500B39688;
-            isa = PBXBuildFile;
-        };
-        416712651BC3D8D900B39688 =         {
-            containerPortal = 08FB7793FE84155DC02AAC07;
-            isa = PBXContainerItemProxy;
-            proxyType = 1;
-            remoteGlobalIDString = 416712311BC3D45500B39688;
-            remoteInfo = mulleXcode;
-        };
-        416712661BC3D8D900B39688 =         {
-            isa = PBXTargetDependency;
-            target = 416712311BC3D45500B39688;
-            targetProxy = 416712651BC3D8D900B39688;
-        };
-        4167126C1BC3E6FD00B39688 =         {
-            fileRef = 4121674F12D897FB00D49F14;
-            isa = PBXBuildFile;
-        };
-        41786C9812C7B2840010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "NSObject+DecodeWithObjectStorage.h";
-            sourceTree = "<group>";
-        };
-        41786C9912C7B2840010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "NSObject+DecodeWithObjectStorage.m";
-            sourceTree = "<group>";
-        };
-        41786C9B12C7B2F20010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "PBXObject.h";
-            sourceTree = "<group>";
-        };
-        41786C9C12C7B2F20010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "PBXObject.m";
-            sourceTree = "<group>";
-        };
-        41786CAB12C7B6680010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "MullePBXUnarchiver.h";
-            sourceTree = "<group>";
-        };
-        41786CAC12C7B6680010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "MullePBXUnarchiver.m";
-            sourceTree = "<group>";
-        };
-        41786F9B12C7E08F0010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "PBXPathObject+HierarchyAndPaths.h";
-            sourceTree = "<group>";
-        };
-        41786F9C12C7E08F0010EB6D =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "PBXPathObject+HierarchyAndPaths.m";
-            sourceTree = "<group>";
-        };
-        41795C0F1BCA80CC00CEB1CE =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "net.daringfireball.markdown";
-            path = "README.md";
-            sourceTree = "<group>";
-        };
-        41795C101BCA80CC00CEB1CE =         {
-            fileRef = 41795C0F1BCA80CC00CEB1CE;
-            isa = PBXBuildFile;
-        };
-        418C5D6713AE2C9900E14843 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "PBXProject+VirtualProjectRoot.h";
-            sourceTree = "<group>";
-        };
-        418C5D6813AE2CAF00E14843 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "PBXProject+VirtualProjectRoot.m";
-            sourceTree = "<group>";
-        };
-        41D6EA0D1D61E22D00221D7A =         {
-            isa = PBXFileReference;
-            lastKnownFileType = "wrapper.framework";
-            name = "Foundation.framework";
-            path = "System/Library/Frameworks/Foundation.framework";
-            sourceTree = SDKROOT;
-        };
-        41D6EA0E1D61E22D00221D7A =         {
-            fileRef = 41D6EA0D1D61E22D00221D7A;
-            isa = PBXBuildFile;
-        };
-        41F6FBAD1BC3FE8F000C60B2 =         {
-            fileRef = 412167B312D89EF700D49F14;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Public
-                );
-            };
-        };
-        41F6FBAE1BC3FE94000C60B2 =         {
-            fileRef = 4121697A12D8B42500D49F14;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Private
-                );
-            };
-        };
-        41F6FBAF1BC3FE99000C60B2 =         {
-            fileRef = 412167BB12D8A57E00D49F14;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Public
-                );
-            };
-        };
-        41F6FBB01BC3FE9D000C60B2 =         {
-            fileRef = 41786CAB12C7B6680010EB6D;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Public
-                );
-            };
-        };
-        41F6FBB11BC3FEA1000C60B2 =         {
-            fileRef = 41786C9812C7B2840010EB6D;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Private
-                );
-            };
-        };
-        41F6FBB21BC3FEA5000C60B2 =         {
-            fileRef = 41786C9B12C7B2F20010EB6D;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Public
-                );
-            };
-        };
-        41F6FBB31BC3FEAB000C60B2 =         {
-            fileRef = 4101507114431CD70019AB2E;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Private
-                );
-            };
-        };
-        41F6FBB51BC40248000C60B2 =         {
-            children =             (
-                4167125C1BC3D8BB00B39688,
-                4138C84C12DA2F5400980090,
-                410F609412C80F79007EA949,
-                412167B212D89ED100D49F14
-            );
-            isa = PBXGroup;
-            name = src;
-            sourceTree = "<group>";
-        };
-        41F6FBB81BC4037D000C60B2 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.h";
-            path = "NSString+LeadingDotExpansion.h";
-            sourceTree = "<group>";
-        };
-        41F6FBB91BC4037D000C60B2 =         {
-            fileEncoding = 4;
-            isa = PBXFileReference;
-            lastKnownFileType = "sourcecode.c.objc";
-            path = "NSString+LeadingDotExpansion.m";
-            sourceTree = "<group>";
-        };
-        41F6FBBB1BC40869000C60B2 =         {
-            fileRef = 41F6FBB81BC4037D000C60B2;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Private
-                );
-            };
-        };
-        41F6FBBC1BC4086D000C60B2 =         {
-            fileRef = 41F6FBB91BC4037D000C60B2;
-            isa = PBXBuildFile;
-        };
-        41F6FBBD1BC40874000C60B2 =         {
-            fileRef = 4121674E12D897FB00D49F14;
-            isa = PBXBuildFile;
-            settings =             {
-                ATTRIBUTES =                 (
-                    Private
-                );
-            };
-        };
-    };
-    rootObject = 08FB7793FE84155DC02AAC07;
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4167124A1BC3D49200B39688 /* MullePBXUnarchiver.m in Sources */ = {isa = PBXBuildFile; fileRef = 41786CAC12C7B6680010EB6D /* MullePBXUnarchiver.m */; };
+		4167124C1BC3D49200B39688 /* NSObject+DecodeWithObjectStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 41786C9912C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.m */; };
+		4167124E1BC3D49200B39688 /* PBXObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 41786C9C12C7B2F20010EB6D /* PBXObject.m */; };
+		416712501BC3D49200B39688 /* PBXProjectProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = 4101507214431CD70019AB2E /* PBXProjectProxy.m */; };
+		416712521BC3D49E00B39688 /* MullePBXArchiver.m in Sources */ = {isa = PBXBuildFile; fileRef = 412167B412D89EF700D49F14 /* MullePBXArchiver.m */; };
+		416712541BC3D49E00B39688 /* MulleSortedKeyDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = 4121697B12D8B42500D49F14 /* MulleSortedKeyDictionary.m */; };
+		416712561BC3D49E00B39688 /* PBXObject+PBXEncoding.m in Sources */ = {isa = PBXBuildFile; fileRef = 412167BC12D8A57E00D49F14 /* PBXObject+PBXEncoding.m */; };
+		4167125E1BC3D8BB00B39688 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4167125D1BC3D8BB00B39688 /* main.m */; };
+		416712641BC3D8CF00B39688 /* libmullepbx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 416712321BC3D45500B39688 /* libmullepbx.a */; };
+		4167126C1BC3E6FD00B39688 /* NSString+KeyFromSetterSelector.m in Sources */ = {isa = PBXBuildFile; fileRef = 4121674F12D897FB00D49F14 /* NSString+KeyFromSetterSelector.m */; };
+		41795C101BCA80CC00CEB1CE /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 41795C0F1BCA80CC00CEB1CE /* README.md */; };
+		41D6EA0E1D61E22D00221D7A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41D6EA0D1D61E22D00221D7A /* Foundation.framework */; };
+		41F6FBAD1BC3FE8F000C60B2 /* MullePBXArchiver.h in Headers */ = {isa = PBXBuildFile; fileRef = 412167B312D89EF700D49F14 /* MullePBXArchiver.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		41F6FBAE1BC3FE94000C60B2 /* MulleSortedKeyDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 4121697A12D8B42500D49F14 /* MulleSortedKeyDictionary.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		41F6FBAF1BC3FE99000C60B2 /* PBXObject+PBXEncoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 412167BB12D8A57E00D49F14 /* PBXObject+PBXEncoding.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		41F6FBB01BC3FE9D000C60B2 /* MullePBXUnarchiver.h in Headers */ = {isa = PBXBuildFile; fileRef = 41786CAB12C7B6680010EB6D /* MullePBXUnarchiver.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		41F6FBB11BC3FEA1000C60B2 /* NSObject+DecodeWithObjectStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 41786C9812C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		41F6FBB21BC3FEA5000C60B2 /* PBXObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 41786C9B12C7B2F20010EB6D /* PBXObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		41F6FBB31BC3FEAB000C60B2 /* PBXProjectProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = 4101507114431CD70019AB2E /* PBXProjectProxy.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		41F6FBBB1BC40869000C60B2 /* NSString+LeadingDotExpansion.h in Headers */ = {isa = PBXBuildFile; fileRef = 41F6FBB81BC4037D000C60B2 /* NSString+LeadingDotExpansion.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		41F6FBBC1BC4086D000C60B2 /* NSString+LeadingDotExpansion.m in Sources */ = {isa = PBXBuildFile; fileRef = 41F6FBB91BC4037D000C60B2 /* NSString+LeadingDotExpansion.m */; };
+		41F6FBBD1BC40874000C60B2 /* NSString+KeyFromSetterSelector.h in Headers */ = {isa = PBXBuildFile; fileRef = 4121674E12D897FB00D49F14 /* NSString+KeyFromSetterSelector.h */; settings = {ATTRIBUTES = (Private, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		416712651BC3D8D900B39688 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 416712311BC3D45500B39688;
+			remoteInfo = mulleXcode;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		416712591BC3D8BB00B39688 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08FB779EFE84155DC02AAC07 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; sourceTree = "<absolute>"; };
+		4101507114431CD70019AB2E /* PBXProjectProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXProjectProxy.h; sourceTree = "<group>"; };
+		4101507214431CD70019AB2E /* PBXProjectProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PBXProjectProxy.m; sourceTree = "<group>"; };
+		410F65C512C90A6D007EA949 /* PBXProject+Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXProject+Settings.h"; sourceTree = "<group>"; };
+		410F65C612C90A6D007EA949 /* PBXProject+Settings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXProject+Settings.m"; sourceTree = "<group>"; };
+		411FA53A12DA484F005C2979 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		4121674E12D897FB00D49F14 /* NSString+KeyFromSetterSelector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+KeyFromSetterSelector.h"; sourceTree = "<group>"; };
+		4121674F12D897FB00D49F14 /* NSString+KeyFromSetterSelector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+KeyFromSetterSelector.m"; sourceTree = "<group>"; };
+		412167B312D89EF700D49F14 /* MullePBXArchiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MullePBXArchiver.h; sourceTree = "<group>"; };
+		412167B412D89EF700D49F14 /* MullePBXArchiver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MullePBXArchiver.m; sourceTree = "<group>"; };
+		412167BB12D8A57E00D49F14 /* PBXObject+PBXEncoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXObject+PBXEncoding.h"; sourceTree = "<group>"; };
+		412167BC12D8A57E00D49F14 /* PBXObject+PBXEncoding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXObject+PBXEncoding.m"; sourceTree = "<group>"; };
+		4121697A12D8B42500D49F14 /* MulleSortedKeyDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MulleSortedKeyDictionary.h; sourceTree = "<group>"; };
+		4121697B12D8B42500D49F14 /* MulleSortedKeyDictionary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MulleSortedKeyDictionary.m; sourceTree = "<group>"; };
+		415CE1641487CAD300578330 /* PBXTarget+HierarchyAndPaths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXTarget+HierarchyAndPaths.h"; sourceTree = "<group>"; };
+		415CE1651487CAD300578330 /* PBXTarget+HierarchyAndPaths.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXTarget+HierarchyAndPaths.m"; sourceTree = "<group>"; };
+		416712321BC3D45500B39688 /* libmullepbx.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmullepbx.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4167125B1BC3D8BB00B39688 /* mulle-xcode-settings */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mulle-xcode-settings"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4167125D1BC3D8BB00B39688 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		41786C9812C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+DecodeWithObjectStorage.h"; sourceTree = "<group>"; };
+		41786C9912C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+DecodeWithObjectStorage.m"; sourceTree = "<group>"; };
+		41786C9B12C7B2F20010EB6D /* PBXObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXObject.h; sourceTree = "<group>"; };
+		41786C9C12C7B2F20010EB6D /* PBXObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PBXObject.m; sourceTree = "<group>"; };
+		41786CAB12C7B6680010EB6D /* MullePBXUnarchiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MullePBXUnarchiver.h; sourceTree = "<group>"; };
+		41786CAC12C7B6680010EB6D /* MullePBXUnarchiver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MullePBXUnarchiver.m; sourceTree = "<group>"; };
+		41786F9B12C7E08F0010EB6D /* PBXPathObject+HierarchyAndPaths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXPathObject+HierarchyAndPaths.h"; sourceTree = "<group>"; };
+		41786F9C12C7E08F0010EB6D /* PBXPathObject+HierarchyAndPaths.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXPathObject+HierarchyAndPaths.m"; sourceTree = "<group>"; };
+		41795C0F1BCA80CC00CEB1CE /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		418C5D6713AE2C9900E14843 /* PBXProject+VirtualProjectRoot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXProject+VirtualProjectRoot.h"; sourceTree = "<group>"; };
+		418C5D6813AE2CAF00E14843 /* PBXProject+VirtualProjectRoot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXProject+VirtualProjectRoot.m"; sourceTree = "<group>"; };
+		41D6EA0D1D61E22D00221D7A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		41F6FBB81BC4037D000C60B2 /* NSString+LeadingDotExpansion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+LeadingDotExpansion.h"; sourceTree = "<group>"; };
+		41F6FBB91BC4037D000C60B2 /* NSString+LeadingDotExpansion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+LeadingDotExpansion.m"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		416712581BC3D8BB00B39688 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				41D6EA0E1D61E22D00221D7A /* Foundation.framework in Frameworks */,
+				416712641BC3D8CF00B39688 /* libmullepbx.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* MulleXcodeToMake */ = {
+			isa = PBXGroup;
+			children = (
+				41D6EA0D1D61E22D00221D7A /* Foundation.framework */,
+				41795C0F1BCA80CC00CEB1CE /* README.md */,
+				41F6FBB51BC40248000C60B2 /* src */,
+				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = MulleXcodeToMake;
+			sourceTree = "<group>";
+		};
+		08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				411FA53A12DA484F005C2979 /* Foundation.framework */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				416712321BC3D45500B39688 /* libmullepbx.a */,
+				4167125B1BC3D8BB00B39688 /* mulle-xcode-settings */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		410F609412C80F79007EA949 /* PBXReading */ = {
+			isa = PBXGroup;
+			children = (
+				41786CAB12C7B6680010EB6D /* MullePBXUnarchiver.h */,
+				41786CAC12C7B6680010EB6D /* MullePBXUnarchiver.m */,
+				41786C9812C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.h */,
+				41786C9912C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.m */,
+				41786C9B12C7B2F20010EB6D /* PBXObject.h */,
+				41786C9C12C7B2F20010EB6D /* PBXObject.m */,
+				4101507114431CD70019AB2E /* PBXProjectProxy.h */,
+				4101507214431CD70019AB2E /* PBXProjectProxy.m */,
+				4121674E12D897FB00D49F14 /* NSString+KeyFromSetterSelector.h */,
+				4121674F12D897FB00D49F14 /* NSString+KeyFromSetterSelector.m */,
+				41F6FBB81BC4037D000C60B2 /* NSString+LeadingDotExpansion.h */,
+				41F6FBB91BC4037D000C60B2 /* NSString+LeadingDotExpansion.m */,
+			);
+			name = PBXReading;
+			path = src/PBXReading;
+			sourceTree = "<group>";
+		};
+		411FA53712DA483B005C2979 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		412167B212D89ED100D49F14 /* PBXWriting */ = {
+			isa = PBXGroup;
+			children = (
+				412167B312D89EF700D49F14 /* MullePBXArchiver.h */,
+				412167B412D89EF700D49F14 /* MullePBXArchiver.m */,
+				4121697A12D8B42500D49F14 /* MulleSortedKeyDictionary.h */,
+				4121697B12D8B42500D49F14 /* MulleSortedKeyDictionary.m */,
+				412167BB12D8A57E00D49F14 /* PBXObject+PBXEncoding.h */,
+				412167BC12D8A57E00D49F14 /* PBXObject+PBXEncoding.m */,
+			);
+			name = PBXWriting;
+			path = src/PBXWriting;
+			sourceTree = "<group>";
+		};
+		4138C84C12DA2F5400980090 /* PBXSupport */ = {
+			isa = PBXGroup;
+			children = (
+				41786F9B12C7E08F0010EB6D /* PBXPathObject+HierarchyAndPaths.h */,
+				41786F9C12C7E08F0010EB6D /* PBXPathObject+HierarchyAndPaths.m */,
+				415CE1641487CAD300578330 /* PBXTarget+HierarchyAndPaths.h */,
+				415CE1651487CAD300578330 /* PBXTarget+HierarchyAndPaths.m */,
+				410F65C512C90A6D007EA949 /* PBXProject+Settings.h */,
+				410F65C612C90A6D007EA949 /* PBXProject+Settings.m */,
+				418C5D6713AE2C9900E14843 /* PBXProject+VirtualProjectRoot.h */,
+				418C5D6813AE2CAF00E14843 /* PBXProject+VirtualProjectRoot.m */,
+			);
+			name = PBXSupport;
+			path = src/PBXSupport;
+			sourceTree = "<group>";
+		};
+		4167125C1BC3D8BB00B39688 /* mulle-xcode-settings */ = {
+			isa = PBXGroup;
+			children = (
+				4167125D1BC3D8BB00B39688 /* main.m */,
+			);
+			name = "mulle-xcode-settings";
+			path = "src/mulle-xcode-settings";
+			sourceTree = "<group>";
+		};
+		41F6FBB51BC40248000C60B2 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				4167125C1BC3D8BB00B39688 /* mulle-xcode-settings */,
+				4138C84C12DA2F5400980090 /* PBXSupport */,
+				410F609412C80F79007EA949 /* PBXReading */,
+				412167B212D89ED100D49F14 /* PBXWriting */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		416712301BC3D45500B39688 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				41F6FBAD1BC3FE8F000C60B2 /* MullePBXArchiver.h in Headers */,
+				41F6FBB01BC3FE9D000C60B2 /* MullePBXUnarchiver.h in Headers */,
+				41F6FBB21BC3FEA5000C60B2 /* PBXObject.h in Headers */,
+				41F6FBAF1BC3FE99000C60B2 /* PBXObject+PBXEncoding.h in Headers */,
+				41F6FBAE1BC3FE94000C60B2 /* MulleSortedKeyDictionary.h in Headers */,
+				41F6FBB11BC3FEA1000C60B2 /* NSObject+DecodeWithObjectStorage.h in Headers */,
+				41F6FBBD1BC40874000C60B2 /* NSString+KeyFromSetterSelector.h in Headers */,
+				41F6FBBB1BC40869000C60B2 /* NSString+LeadingDotExpansion.h in Headers */,
+				41F6FBB31BC3FEAB000C60B2 /* PBXProjectProxy.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		416712311BC3D45500B39688 /* mullepbx */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 416712471BC3D45500B39688 /* Build configuration list for PBXNativeTarget "mullepbx" */;
+			buildPhases = (
+				416712301BC3D45500B39688 /* Headers */,
+				4167122E1BC3D45500B39688 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mullepbx;
+			productName = mulleXcode;
+			productReference = 416712321BC3D45500B39688 /* libmullepbx.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		4167125A1BC3D8BB00B39688 /* mulle-xcode-settings */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4167125F1BC3D8BB00B39688 /* Build configuration list for PBXNativeTarget "mulle-xcode-settings" */;
+			buildPhases = (
+				416712571BC3D8BB00B39688 /* Sources */,
+				416712581BC3D8BB00B39688 /* Frameworks */,
+				416712591BC3D8BB00B39688 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				416712661BC3D8D900B39688 /* PBXTargetDependency */,
+			);
+			name = "mulle-xcode-settings";
+			productName = "mulle-xcode-settings";
+			productReference = 4167125B1BC3D8BB00B39688 /* mulle-xcode-settings */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				TargetAttributes = {
+					416712311BC3D45500B39688 = {
+						CreatedOnToolsVersion = 6.4;
+					};
+					4167125A1BC3D8BB00B39688 = {
+						CreatedOnToolsVersion = 6.4;
+					};
+				};
+			};
+			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "mulle-xcode-settings" */;
+			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 08FB7794FE84155DC02AAC07 /* MulleXcodeToMake */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 411FA53712DA483B005C2979 /* Products */;
+					ProjectRef = 08FB779EFE84155DC02AAC07;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				4167125A1BC3D8BB00B39688 /* mulle-xcode-settings */,
+				416712311BC3D45500B39688 /* mullepbx */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4167122E1BC3D45500B39688 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				416712521BC3D49E00B39688 /* MullePBXArchiver.m in Sources */,
+				4167124A1BC3D49200B39688 /* MullePBXUnarchiver.m in Sources */,
+				416712541BC3D49E00B39688 /* MulleSortedKeyDictionary.m in Sources */,
+				4167124E1BC3D49200B39688 /* PBXObject.m in Sources */,
+				416712561BC3D49E00B39688 /* PBXObject+PBXEncoding.m in Sources */,
+				416712501BC3D49200B39688 /* PBXProjectProxy.m in Sources */,
+				4167124C1BC3D49200B39688 /* NSObject+DecodeWithObjectStorage.m in Sources */,
+				4167126C1BC3E6FD00B39688 /* NSString+KeyFromSetterSelector.m in Sources */,
+				41F6FBBC1BC4086D000C60B2 /* NSString+LeadingDotExpansion.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		416712571BC3D8BB00B39688 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				41795C101BCA80CC00CEB1CE /* README.md in Sources */,
+				4167125E1BC3D8BB00B39688 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		416712661BC3D8D900B39688 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 416712311BC3D45500B39688 /* mullepbx */;
+			targetProxy = 416712651BC3D8D900B39688 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB927908733DD40010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
+				CURRENT_PROJECT_VERSION = 1.1.1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				DYLIB_CURRENT_VERSION = 1.0.0;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				OTHER_CFLAGS = "-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		1DEB927A08733DD40010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
+				CURRENT_PROJECT_VERSION = 1.1.1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				DYLIB_CURRENT_VERSION = 1.0.0;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				OTHER_CFLAGS = "-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		416712431BC3D45500B39688 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+			};
+			name = Debug;
+		};
+		416712441BC3D45500B39688 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+			};
+			name = Release;
+		};
+		416712601BC3D8BB00B39688 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS_PLATFORM)",
+					"-all_load",
+					"$(inherited)",
+				);
+			};
+			name = Debug;
+		};
+		416712611BC3D8BB00B39688 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS_PLATFORM)",
+					"-all_load",
+					"$(inherited)",
+				);
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "mulle-xcode-settings" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB927908733DD40010E9CD /* Debug */,
+				1DEB927A08733DD40010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		416712471BC3D45500B39688 /* Build configuration list for PBXNativeTarget "mullepbx" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				416712431BC3D45500B39688 /* Debug */,
+				416712441BC3D45500B39688 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4167125F1BC3D8BB00B39688 /* Build configuration list for PBXNativeTarget "mulle-xcode-settings" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				416712601BC3D8BB00B39688 /* Debug */,
+				416712611BC3D8BB00B39688 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
 }
