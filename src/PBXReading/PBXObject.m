@@ -45,7 +45,7 @@
    project_ = pbx;
    
    info_ = [NSMutableDictionary new];
-   [self setIsa:NSStringFromClass( isa)];
+   [self setIsa:NSStringFromClass( [self class])];
    
    return( self);
 }
@@ -116,7 +116,7 @@
    s = [self objectForKey:@"name"];
    if( ! s)
    {
-      s = [isa description];
+      s = [[self class] description];
       if( [s hasPrefix:@"PBX"])
          s = [s substringFromIndex:3];
    }
@@ -138,7 +138,7 @@
 
 - (NSString *) debugDescription
 {
-   return( [NSString stringWithFormat:@"<%@ %p (%@)>", isa, self, [self displayName]]);
+   return( [NSString stringWithFormat:@"<%@ %p (%@)>", [self class], self, [self displayName]]);
 }
 
 // cheap..
@@ -216,7 +216,7 @@
 
 - (NSString *) debugDescription
 {
-   return( [NSString stringWithFormat:@"<%@ %p: \"%@\">", isa, self, [self displayName]]);
+   return( [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [self displayName]]);
 }
 
 
@@ -312,7 +312,7 @@
    NSString  *children;
    
    children = [[self subgroups] valueForKey:@"displayName"];
-   return( [NSString stringWithFormat:@"<%@ %p: \"%@\" (%@)>", isa, self, [self displayName], children]);
+   return( [NSString stringWithFormat:@"<%@ %p: \"%@\" (%@)>", [self class], self, [self displayName], children]);
 }
 
 @end

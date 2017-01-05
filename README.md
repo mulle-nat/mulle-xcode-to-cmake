@@ -112,6 +112,11 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
+
+#### 1.1.1
+
+* Had to say good bye to **isa**
+
 #### 1.1.0
 
 * Added **list** command, which makes `mulle-xcode-settings` easier to use.
