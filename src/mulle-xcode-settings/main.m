@@ -36,20 +36,21 @@ static void   usage()
            "\n"
            "Options:\n"
            ""
-           "\t-configuration <configuration> : configuration to set\n"
-           "\t-target <target>               : target to set\n"
-           "\t-alltargets                    : set on all targets\n"
+           "\t-c <configuration>          : configuration to set\n"
+           "\t-t <target>                 : target to set\n"
+           "\t-a                          : set on all targets\n"
            "\n"
            "Commands:\n"
-           "\tget     <key>                  : get value for key\n"
-           "\tset     <key> <value>          : sets key to value\n"
-           "\tadd     <key> <value>          : adds value to key\n"
-           "\tinsert  <key> <value>          : inserts value in front of key\n"
-           "\tremove  <key> <value>          : removes value from key\n"
-           "\treplace <key> <old> <value>    : replace old value for key (if exists)\n"
+           "\tlist                        : list all keys\n"
+           "\tget     <key>               : get value for key\n"
+           "\tset     <key> <value>       : sets key to value\n"
+           "\tadd     <key> <value>       : adds value to key\n"
+           "\tinsert  <key> <value>       : inserts value in front of key\n"
+           "\tremove  <key> <value>       : removes value from key\n"
+           "\treplace <key> <old> <value> : replace old value for key (if exists)\n"
            "\n"
            "Environment:\n"
-           "VERBOSE                          : dump some info to stderr\n"
+           "\tVERBOSE                     : dump some info to stderr\n"
          );
    
    exit( 1);
@@ -67,6 +68,18 @@ static PBXTarget   *find_target_by_name( PBXProject *root, NSString *name)
          break;
    
    return( pbxtarget);
+}
+
+
+static void   list_target_names( PBXProject *root)
+{
+   NSEnumerator   *rover;
+   PBXTarget      *pbxtarget;
+   
+   printf( "Targets:\n");
+   rover = [[root targets] objectEnumerator];
+   while( pbxtarget = [rover nextObject])
+      printf( "\t%s\n", [[pbxtarget name] UTF8String]);
 }
 
 
@@ -89,6 +102,7 @@ enum Command
    Add,
    Get,
    Insert,
+   List,
    Remove,
    Replace,
    Set
@@ -357,19 +371,35 @@ static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command
 
 static void   hackit( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, NSString *value, NSString *old)
 {
-   NSMutableDictionary   *settings;
-   id                    prevValue;
+   id             settings;
+   id             prevValue;
+   NSEnumerator   *rover;
    
    if( verbose)
-      fprintf( stderr, "configuration: %s\n", [[xcconfiguration name] UTF8String]);
-   
-   settings  = [[[xcconfiguration buildSettings] mutableCopy] autorelease];
+      fprintf( stderr, "%s\n", [[xcconfiguration name] UTF8String]);
+
+   settings = [xcconfiguration buildSettings];
+   if( cmd == List)
+   {
+      rover = [[[settings allKeys] sortedArrayUsingSelector:@selector( caseInsensitiveCompare:)] objectEnumerator];
+
+      printf( "\t%s:\n", [[xcconfiguration name] UTF8String]);
+      while( key = [rover nextObject])
+      {
+         prevValue = [settings objectForKey:key];
+         printf( "\t\t%s=\"%s\"\n",
+                  [key UTF8String],
+                  [[prevValue description] UTF8String]);
+      }
+      return;
+   }
+
    prevValue = [settings objectForKey:key];
-   
    if( verbose)
       fprintf( stderr, "old: %s = %s\n",
           [key UTF8String], [[prevValue description] UTF8String]);
    
+   settings = [[settings mutableCopy] autorelease];
    if( [prevValue isKindOfClass:[NSArray class]])
    {
       hackit_array( xcconfiguration, cmd, key, value, old, settings, prevValue);
@@ -392,7 +422,10 @@ static void   _setting_hack( PBXObjectWithConfigurationList *obj,
 
    if( verbose)
       fprintf( stderr, "object: %s\n", [[obj name] UTF8String]);
-
+   
+   if( cmd == List)
+      printf( "%s:\n", [[obj name] UTF8String]);
+   
    if( configuration)
    {
       xcconfiguration = find_configuration_by_name( obj, configuration);
@@ -423,6 +456,7 @@ static void   setting_hack( PBXProject *root,
    NSEnumerator                     *rover;
 
    obj = root;
+
    if( target)
    {
       if( [target isEqualToString:@"##ALL##"])
@@ -437,6 +471,11 @@ static void   setting_hack( PBXProject *root,
       if( ! pbxtarget)
          fail( @"target \"%@\" not found", target);
       obj = pbxtarget;
+   }
+   else
+   {
+      if( cmd == List)
+         list_target_names( root);
    }
 
    _setting_hack( obj, cmd, key, value, old, configuration);
@@ -533,7 +572,9 @@ static int   _main( int argc, const char * argv[])
       s = [arguments objectAtIndex:i];
       
       // options
-      if( [s isEqualToString:@"-configuration"])
+      if(  [s isEqualToString:@"-c"] ||
+           [s isEqualToString:@"-configuration"] ||
+           [s isEqualToString:@"--configuration"])
       {
          if( ++i >= n)
             usage();
@@ -542,7 +583,9 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
-      if( [s isEqualToString:@"-target"])
+      if( [s isEqualToString:@"-t"] ||
+          [s isEqualToString:@"-target"] ||
+          [s isEqualToString:@"--target"])
       {
          if( ++i >= n)
             usage();
@@ -551,9 +594,18 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
       
-      if( [s isEqualToString:@"-alltargets"])
+      if( [s isEqualToString:@"-a"] ||
+          [s isEqualToString:@"-alltargets"] ||
+          [s isEqualToString:@"--alltargets"])
       {
          target = @"##ALL##";
+         continue;
+      }
+
+      // commands
+      if( [s isEqualToString:@"list"])
+      {
+         setting_hack( root, List, nil, nil, nil, configuration, target);
          continue;
       }
 
@@ -562,7 +614,6 @@ static int   _main( int argc, const char * argv[])
       
       key = [arguments objectAtIndex:i];
 
-      // commands
       if( [s isEqualToString:@"get"])
       {
          setting_hack( root, Get, key, nil, nil, configuration, target);
