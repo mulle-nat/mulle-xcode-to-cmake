@@ -30,16 +30,20 @@
 
 
 static BOOL   verbose;
-static BOOL   suppress;
+static BOOL   suppressBoilerplate;
+static BOOL   suppressProject;
+static BOOL   suppressFoundation;
+
 
 static NSMutableDictionary  *staticLibraries;
 static NSMutableDictionary  *sharedLibraries;
+static NSMutableSet         *headerDirectories;
 
 
 static void   addSharedLibrariesToFind( NSString *name, NSString *library)
 {
    if( ! sharedLibraries)
-      sharedLibraries = [NSMutableDictionary dictionary];
+      sharedLibraries = [NSMutableDictionary new];
    [sharedLibraries setObject:library
                        forKey:name];
 }
@@ -47,9 +51,17 @@ static void   addSharedLibrariesToFind( NSString *name, NSString *library)
 static void   addStaticLibrariesToFind( NSString *name, NSString *library)
 {
    if( ! staticLibraries)
-      staticLibraries = [NSMutableDictionary dictionary];
+      staticLibraries = [NSMutableDictionary new];
    [staticLibraries setObject:library
                        forKey:name];
+}
+
+
+static void   addHeaderDirectory( NSString *path)
+{
+   if( ! headerDirectories)
+      headerDirectories = [NSMutableSet new];
+   [headerDirectories addObject:path];
 }
 
 
@@ -61,7 +73,9 @@ static void   usage()
            "Options:\n"
            ""
            "\t-t <target> : target to export\n"
-           "\t-b          : don't export mulle-bootstrap support\n"
+           "\t-b          : suppress boilerplate definitions\n"
+           "\t-p          : suppress project\n"
+           "\t-f          : suppress Foundation (implicitly added)\n"
            "\n"
            "Commands:\n"
            "\texport      : export CMakeLists.txt to stdout\n"
@@ -139,12 +153,14 @@ static void  fail( NSString *format, ...)
 
 static void   export_files( NSArray *files,
                             NSString *name,
-                            enum Command cmd)
+                            enum Command cmd,
+                            BOOL isHeader)
 {
    NSEnumerator      *rover;
    PBXBuildFile      *file;
    PBXFileReference  *reference;
    NSString          *path;
+   NSString          *dir;
    
    if( cmd == Export)
    {
@@ -158,6 +174,14 @@ static void   export_files( NSArray *files,
       path      = [reference sourceTreeRelativeFilesystemPath];
       if( ! path)
          path = [reference displayName]; // hack (should be path)
+      else
+         if( isHeader)
+         {
+            dir = [path stringByDeletingLastPathComponent];
+            if( ! [dir length])
+               dir = @".";  // needed when subdir does include
+            addHeaderDirectory( dir);
+         }
       printf( "%s\n", [path UTF8String]);
    }
 
@@ -175,17 +199,17 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
    name = @"PUBLIC_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   export_files( [pbxphase publicHeaders], name, cmd);
+   export_files( [pbxphase publicHeaders], name, cmd, YES);
 
    name = @"PROJECT_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   export_files( [pbxphase projectHeaders], name, cmd);
+   export_files( [pbxphase projectHeaders], name, cmd, YES);
 
    name = @"PRIVATE_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   export_files( [pbxphase privateHeaders], name, cmd);
+   export_files( [pbxphase privateHeaders], name, cmd, YES);
 }
 
 
@@ -198,31 +222,19 @@ static void   export_sources_phase( PBXSourcesBuildPhase *pbxphase,
    name = @"SOURCES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   export_files( [pbxphase files], name, cmd);
+   export_files( [pbxphase files], name, cmd, NO);
 }
 
 
-
-static void   export_libraries( PBXFrameworksBuildPhase *pbxphase,
-                                enum Command cmd,
-                                NSString *prefix,
-                                BOOL isStatic)
+// not proud of this.. :)
+static void   collect_libraries( PBXFrameworksBuildPhase *pbxphase,
+                                 BOOL isStatic)
 {
    NSEnumerator      *rover;
    PBXBuildFile      *file;
    PBXFileReference  *reference;
    NSString          *path;
-   NSString          *name;
    NSString          *libraryName;
-   
-   name = isStatic ? @"STATIC_DEPENDENCIES" : @"DEPENDENCIES";
-   if( [prefix length])
-      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   
-   if( cmd == Export)
-   {
-      printf( "\nset( %s\n", [name UTF8String]);
-   }
    
    rover = [[pbxphase files] objectEnumerator];
    while( file = [rover nextObject])
@@ -238,30 +250,77 @@ static void   export_libraries( PBXFrameworksBuildPhase *pbxphase,
       if( [[[reference path] pathExtension] isEqualToString:@"a"])
       {
          if( isStatic)
-         {
-            printf( "${%s_LIBRARY}\n", [libraryName UTF8String]);
             addStaticLibrariesToFind( path, libraryName);
-         }
       }
       else
          if( ! isStatic)
          {
-            printf( "${%s_LIBRARY}\n", [libraryName UTF8String]);
             addSharedLibrariesToFind( path, libraryName);
          }
    }
-
-   if( cmd == Export)
-      printf( ")\n");
 }
 
+
+// not proud of this.. :)
+static void   export_libraries( NSDictionary *libraries,
+                                NSString *prefix,
+                                BOOL isStatic)
+{
+   NSEnumerator      *rover;
+   PBXBuildFile      *file;
+   PBXFileReference  *reference;
+   NSString          *path;
+   NSString          *name;
+   NSString          *libraryName;
+   
+   name = isStatic ? @"STATIC_DEPENDENCIES" : @"DEPENDENCIES";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   
+   printf( "\nset( %s\n", [name UTF8String]);
+   
+   rover = [[[libraries allKeys] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
+   while( path = [rover nextObject])
+   {
+      libraryName = [libraries objectForKey:path];
+      printf( "${%s_LIBRARY}\n", [libraryName UTF8String]);
+   }
+   
+   printf( ")\n");
+}
+
+
+static void   export_find_libraries( NSDictionary *libraries)
+{
+   NSArray        *keys;
+   NSEnumerator   *rover;
+   NSString       *key;
+   NSString       *library;
+   
+   keys = [[libraries allKeys] sortedArrayUsingSelector:@selector( compare:)];
+   if( [keys count])
+      printf( "\n");
+   
+   rover = [keys objectEnumerator];
+   while( key = [rover nextObject])
+   {
+      library = [libraries objectForKey:key];
+      printf( "find_library( %s_LIBRARY %s)\n", [library UTF8String], [key UTF8String]);
+   }
+}
 
 static void   export_frameworks_phase( PBXFrameworksBuildPhase *pbxphase,
                                        enum Command cmd,
                                        NSString *prefix)
 {
-   export_libraries( pbxphase, cmd, prefix, YES);
-   export_libraries( pbxphase, cmd, prefix, NO);
+   collect_libraries( pbxphase, YES);
+   collect_libraries( pbxphase, NO);
+
+   export_find_libraries( staticLibraries);
+   export_libraries( staticLibraries, prefix, YES);
+
+   export_find_libraries( sharedLibraries);
+   export_libraries( sharedLibraries, prefix, NO);
 }
 
 
@@ -292,6 +351,22 @@ static void   export_phase( PBXBuildPhase *pbxphase,
 }
 
 
+static void   add_foundation_if_needed( PBXTarget *pbxtarget)
+{
+   BOOL       addFoundation;
+   NSString   *type;
+   
+   type = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
+   
+   addFoundation = suppressFoundation ? NO : YES;
+   if( [type hasPrefix:@"library"])
+      addFoundation = NO;
+   
+   if( addFoundation)
+      addSharedLibrariesToFind( @"Foundation", @"FOUNDATION");
+}
+
+
 static void   file_exporter( PBXTarget *pbxtarget,
                              enum Command cmd,
                              BOOL all)
@@ -308,13 +383,14 @@ static void   file_exporter( PBXTarget *pbxtarget,
       return;
    }
    
+   add_foundation_if_needed( pbxtarget);
+   
    rover = [[pbxtarget buildPhases] objectEnumerator];
    while( phase = [rover nextObject])
    {
-      export_phase( phase, cmd, makeMacroName( [pbxtarget name]));
+      export_phase( phase, cmd, all ? makeMacroName( [pbxtarget name]) : nil);
    }
 }
-
 
 
 static void   export_dependency( PBXTargetDependency *pbxdependency,
@@ -322,16 +398,25 @@ static void   export_dependency( PBXTargetDependency *pbxdependency,
                                  PBXTarget *pbxtarget)
 {
    NSString  *dependencyCMakeName;
+   PBXTarget *dsttarget;
    
    if( verbose)
       fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxdependency class]) UTF8String], [[pbxdependency name] UTF8String]);
    
    if( cmd != Export)
       return;
-
+   
+   dsttarget = [pbxdependency target];
+   if( ! dsttarget)
+   {
+      if( verbose)
+         fprintf( stderr, "mulle-xcode-to-cmake: can not deal with %s using it's name\n", [[pbxdependency debugDescription] UTF8String]);
+      return;
+   }
+   
    printf( "\nadd_dependencies( %s %s);\n",
           [[pbxtarget name] UTF8String],
-          [[[pbxdependency target] name] UTF8String]);
+          [[dsttarget name] UTF8String]);
 }
 
 
@@ -352,6 +437,7 @@ static void   target_exporter( PBXTarget *pbxtarget,
    NSString              *name;
    NSString              *staticName;
    NSString              *type;
+   NSString              *path;
    NSString              *macroName;
    char                  *format;
    
@@ -364,17 +450,26 @@ static void   target_exporter( PBXTarget *pbxtarget,
 
    if( [type isEqualToString:@"library.static"])
    {
-      printf( "\nadd_library( %s STATIC\n", [[pbxtarget name] UTF8String]);
+      printf( "\n"
+              "add_library( %s STATIC\n", [[pbxtarget name] UTF8String]);
    }
    else
-      if( [type hasPrefix:@"library"] || [type hasPrefix:@"framework"])
+      if( [type hasPrefix:@"library"])
       {
-         printf( "\nadd_library( %s SHARED\n", [[pbxtarget name] UTF8String]);
+         printf( "\n"
+                 "add_library( %s SHARED\n", [[pbxtarget name] UTF8String]);
       }
       else
-      {
-         printf( "\nadd_executable( %s\n", [[pbxtarget name] UTF8String]);
-      }
+         if( [type hasPrefix:@"framework"])
+         {
+            printf( "\n"
+                   "add_library( %s SHARED\n", [[pbxtarget name] UTF8String]);
+         }
+         else
+         {
+            printf( "\n"
+                   "add_executable( %s\n", [[pbxtarget name] UTF8String]);
+         }
    
    print_prefixed_variable_expansion( @"SOURCES", macroName, all);
    print_prefixed_variable_expansion( @"PUBLIC_HEADERS", macroName, all);
@@ -382,12 +477,21 @@ static void   target_exporter( PBXTarget *pbxtarget,
    print_prefixed_variable_expansion( @"PRIVATE_HEADERS", macroName, all);
    
    printf( ")\n");
-   
+
+   printf( "\n"
+"target_include_directories( %s\n"
+"   PUBLIC\n",
+      [[pbxtarget name] UTF8String]);
+
+   rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
+   while( path = [rover nextObject])
+      printf( "      %s\n", [path UTF8String]);
+   printf( ")\n");
+
+  
    rover = [[pbxtarget dependencies] objectEnumerator];
    while( dependency = [rover nextObject])
-   {
       export_dependency( dependency, cmd, pbxtarget);
-   }
    
    staticName = @"STATIC_DEPENDENCIES";
    if( all)
@@ -397,7 +501,7 @@ static void   target_exporter( PBXTarget *pbxtarget,
    if( all)
       name = [NSString stringWithFormat:@"%@_%@", macroName, name];
 
-   if( ! suppress)
+   if( ! suppressBoilerplate)
       format = "\ntarget_link_libraries( %s\n"
 "${BEGIN_ALL_LOAD}\n"
 "${%s}\n"
@@ -414,15 +518,6 @@ static void   target_exporter( PBXTarget *pbxtarget,
          [[pbxtarget name] UTF8String],
          [staticName UTF8String],
          [name UTF8String]);
-   printf( "\ntarget_link_libraries( %s\n"
-"${BEGIN_ALL_LOAD}\n"
-"${%s}\n"
-"${END_ALL_LOAD}\n"
-"${%s}\n"
-")\n",
-         [[pbxtarget name] UTF8String],
-         [staticName UTF8String],
-         [name UTF8String]);
    
    name = @"PUBLIC_HEADERS";
    if( all)
@@ -433,7 +528,7 @@ static void   target_exporter( PBXTarget *pbxtarget,
       printf( "\n"
 "if (APPLE)\n");
 
-      if( ! suppress)
+      if( ! suppressBoilerplate)
          printf(
 "   set(BEGIN_ALL_LOAD \"-all_load\")\n"
 "   set(END_ALL_LOAD)\n"
@@ -441,15 +536,16 @@ static void   target_exporter( PBXTarget *pbxtarget,
 
          printf(
 "   set_target_properties( %s PROPERTIES\n"
-"     FRAMEWORK TRUE\n"
-"     FRAMEWORK_VERSION A\n"
-"     # MACOSX_FRAMEWORK_IDENTIFIER \"com.mulle-kybernetik.%s\"\n"
-"     # VERSION \"0.0.0\"\n"
-"     # SOVERSION  \"0.0.0\"\n"
-"     PUBLIC_HEADER \"${%s}\"\n"
+"FRAMEWORK TRUE\n"
+"FRAMEWORK_VERSION A\n"
+"# MACOSX_FRAMEWORK_IDENTIFIER \"com.mulle-kybernetik.%s\"\n"
+"# VERSION \"0.0.0\"\n"
+"# SOVERSION  \"0.0.0\"\n"
+"PUBLIC_HEADER \"${%s}\"\n"
 ")\n"
 "\n"
-"    install( TARGETS %s DESTINATION \"Frameworks\")\n",
+"   install( TARGETS %s DESTINATION \"Frameworks\")\n"
+"endif()\n",
          [[pbxtarget name] UTF8String],
          [[pbxtarget name] UTF8String],
          [name UTF8String],
@@ -468,25 +564,6 @@ static void   target_exporter( PBXTarget *pbxtarget,
 }
 
 
-static void   export_find_libraries( NSDictionary *libraries)
-{
-   NSArray        *keys;
-   NSEnumerator   *rover;
-   NSString       *key;
-   NSString       *library;
-   
-   keys = [[libraries allKeys] sortedArrayUsingSelector:@selector( compare:)];
-   if( [keys count])
-      printf( "\n");
-   
-   rover = [keys objectEnumerator];
-   while( key = [rover nextObject])
-   {
-      library = [libraries objectForKey:key];
-      printf( "find_library( %s_LIBRARY %s)\n", [library UTF8String], [key UTF8String]);
-   }
-}
-
 
 static void   exporter( PBXProject *root,
                         enum Command cmd,
@@ -499,12 +576,18 @@ static void   exporter( PBXProject *root,
 
    if( cmd == Export)
    {
-      printf( "project( %s)\n", [[[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension] UTF8String]);
+      if( ! suppressProject)
+      {
+         printf( "project( %s)\n", target
+            ? [target UTF8String]
+            : [[[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension] UTF8String]);
+         //
+         // cross platform wise 3.4 gave me the least trouble
+         //
+         printf( "\ncmake_minimum_required (VERSION 3.4)\n");
+      }
 
-      // cross platform wise 3.5 gave me the least trouble
-      printf( "\ncmake_minimum_required (VERSION 3.4)\n");
-      
-      if( ! suppress)
+      if( ! suppressBoilerplate)
       {
          printf( "\n"
 "#\n"
@@ -535,7 +618,7 @@ static void   exporter( PBXProject *root,
 "\n");
       }
       
-      if( ! suppress)
+      if( ! suppressBoilerplate)
       {
          printf( "\n"
 "#\n"
@@ -599,9 +682,6 @@ static void   exporter( PBXProject *root,
    if( cmd == List)
       return;
 
-   export_find_libraries( sharedLibraries);
-   export_find_libraries( staticLibraries);
-   
    if( target)
    {
       pbxtarget = find_target_by_name( root, target);
@@ -720,7 +800,21 @@ static int   _main( int argc, const char * argv[])
       if( [s isEqualToString:@"-b"] ||
           [s isEqualToString:@"--no-boilerplate"])
       {
-         suppress = YES;
+         suppressBoilerplate = YES;
+         continue;
+      }
+
+      if( [s isEqualToString:@"-p"] ||
+          [s isEqualToString:@"--no-project"])
+      {
+         suppressProject = YES;
+         continue;
+      }
+
+      if( [s isEqualToString:@"-f"] ||
+          [s isEqualToString:@"--no-foundation"])
+      {
+         suppressFoundation = YES;
          continue;
       }
 

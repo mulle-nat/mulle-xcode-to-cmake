@@ -1,10 +1,8 @@
 # mulle-xcode-to-cmake
 
-A little tool convert Xcode projects to cmake CMakeLists.txt
+A little tool to convert [Xcode](https://developer.apple.com/xcode/) projects to [cmake](https://cmake.org/) CMakeLists.txt
 
-You can specify the target to export. If you don't specify a target, 
-all targets are exported. 
-
+You can specify the target to export. If you don't specify a target,  all targets are exported. 
 It doesn't do a perfect job, but it's better than doing it all by hand.
 
 
@@ -30,7 +28,8 @@ usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>
 
 Options:
 	-t <target> : target to export
-	-b          : don't export mulle-bootstrap support
+	-b          : suppress boilerplate definitions
+	-h          : suppress header
 
 Commands:
 	export      : export CMakeLists.txt to stdout
@@ -55,21 +54,21 @@ boilerplate template code:
 
 ```console
 $ mulle-xcode-to-cmake -b -t mullepbx export mulle-xcode-to-cmake.xcodeproj
-project( mulle-xcode-to-cmake)
+project( mullepbx)
 
 cmake_minimum_required (VERSION 3.4)
 
-set( MULLEPBX_PUBLIC_HEADERS
+set( PUBLIC_HEADERS
 src/PBXWriting/MullePBXArchiver.h
 src/PBXReading/MullePBXUnarchiver.h
 src/PBXReading/PBXObject.h
 src/PBXWriting/PBXObject+PBXEncoding.h
 )
 
-set( MULLEPBX_PROJECT_HEADERS
+set( PROJECT_HEADERS
 )
 
-set( MULLEPBX_PRIVATE_HEADERS
+set( PRIVATE_HEADERS
 src/PBXWriting/MulleSortedKeyDictionary.h
 src/PBXReading/NSObject+DecodeWithObjectStorage.h
 src/PBXReading/NSString+KeyFromSetterSelector.h
@@ -77,7 +76,7 @@ src/PBXReading/NSString+LeadingDotExpansion.h
 src/PBXReading/PBXProjectProxy.h
 )
 
-set( MULLEPBX_SOURCES
+set( SOURCES
 src/PBXWriting/MullePBXArchiver.m
 src/PBXReading/MullePBXUnarchiver.m
 src/PBXWriting/MulleSortedKeyDictionary.m
@@ -101,6 +100,13 @@ ${STATIC_DEPENDENCIES}
 ${DEPENDENCIES}
 )
 
+target_link_libraries( mullepbx
+${BEGIN_ALL_LOAD}
+${STATIC_DEPENDENCIES}
+${END_ALL_LOAD}
+${DEPENDENCIES}
+)
+
 install( TARGETS mullepbx DESTINATION "lib")
 install( FILES ${PUBLIC_HEADERS} DESTINATION "include/mullepbx")
 ```
@@ -110,7 +116,12 @@ install( FILES ${PUBLIC_HEADERS} DESTINATION "include/mullepbx")
 
 This is basically a stripped down version of `mulle_xcode_utility`.
 
+
 ### Releasenotes
+
+# 0.1.0
+
+* Fix some bugs. Add -p and -f options.
 
 
 # 0.0

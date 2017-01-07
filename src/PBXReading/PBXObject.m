@@ -138,7 +138,8 @@
 
 - (NSString *) debugDescription
 {
-   return( [NSString stringWithFormat:@"<%@ %p (%@)>", [self class], self, [self displayName]]);
+   return( [NSString stringWithFormat:@"<%@ %p (%@)>",
+         [self class], self, [self displayName]]);
 }
 
 // cheap..

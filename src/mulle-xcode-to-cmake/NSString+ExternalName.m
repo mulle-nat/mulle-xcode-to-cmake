@@ -39,7 +39,8 @@
       if( ! (len -= range.location + 1))
          return( result);
       
-      [result appendString:sep];
+      if( range.location != 0)
+         [result appendString:sep];
       s = [s substringFromIndex:range.location + 1];
    }
    

@@ -116,7 +116,6 @@
 		08FB7794FE84155DC02AAC07 /* MulleXcodeToMake */ = {
 			isa = PBXGroup;
 			children = (
-				41D6EA0D1D61E22D00221D7A /* Foundation.framework */,
 				41795C0F1BCA80CC00CEB1CE /* README.md */,
 				41F6FBB51BC40248000C60B2 /* src */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
@@ -128,6 +127,7 @@
 		08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				41D6EA0D1D61E22D00221D7A /* Foundation.framework */,
 				411FA53A12DA484F005C2979 /* Foundation.framework */,
 			);
 			name = "External Frameworks and Libraries";
@@ -199,7 +199,7 @@
 			path = src/PBXSupport;
 			sourceTree = "<group>";
 		};
-		4167125C1BC3D8BB00B39688 /* mulle-xcode-settings */ = {
+		4167125C1BC3D8BB00B39688 /* mulle-xcode-to-cmake */ = {
 			isa = PBXGroup;
 			children = (
 				4167125D1BC3D8BB00B39688 /* main.m */,
@@ -212,14 +212,14 @@
 				41B199FC1E21183500193B09 /* NSString+ExternalName.h */,
 				41B199FD1E21183500193B09 /* NSString+ExternalName.m */,
 			);
-			name = "mulle-xcode-settings";
-			path = "src/mulle-xcode-settings";
+			name = "mulle-xcode-to-cmake";
+			path = "src/mulle-xcode-to-cmake";
 			sourceTree = "<group>";
 		};
 		41F6FBB51BC40248000C60B2 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				4167125C1BC3D8BB00B39688 /* mulle-xcode-settings */,
+				4167125C1BC3D8BB00B39688 /* mulle-xcode-to-cmake */,
 				4138C84C12DA2F5400980090 /* PBXSupport */,
 				410F609412C80F79007EA949 /* PBXReading */,
 				412167B212D89ED100D49F14 /* PBXWriting */,
@@ -367,7 +367,7 @@
 		1DEB927908733DD40010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 0.0.0;
+				CURRENT_PROJECT_VERSION = 0.1.0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DYLIB_CURRENT_VERSION = 0.0.0;
@@ -382,7 +382,7 @@
 		1DEB927A08733DD40010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 0.0.0;
+				CURRENT_PROJECT_VERSION = 0.1.0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DYLIB_CURRENT_VERSION = 0.0.0;
