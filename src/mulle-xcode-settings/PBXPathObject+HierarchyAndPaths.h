@@ -1,25 +1,25 @@
 /*
-   mulle-xcode-to-cmake
+   mulle-xcode-utility
    
    $Id: PBXPathObject+HierarchyAndPaths.h,v 65099ebecdce 2011/11/30 23:33:12 nat $
 
    Created by Nat! on 26.12.10.
    Copyright 2010 Mulle kybernetiK
    
-   This file is part of mulle-xcode-to-cmake.
+   This file is part of mulle-xcode-utility.
 
-   mulle-xcode-to-cmake is free software: you can redistribute it and/or modify
+   mulle-xcode-utility is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   mulle-xcode-to-cmake is distributed in the hope that it will be useful,
+   mulle-xcode-utility is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with mulle-xcode-to-cmake.  If not, see <http://www.gnu.org/licenses/>.
+   along with mulle-xcode-utility.  If not, see <http://www.gnu.org/licenses/>.
 */
 #import "PBXObject.h"
 
@@ -44,16 +44,13 @@
 - (NSArray *) sourceTreeRelativeFilesystemPathComponents;
 - (NSArray *) absoluteFilesystemPathComponents;
 
-- (NSArray *) relativeFilesystemPathComponentsToDescendant:(id) descendant;
-- (NSArray *) absoluteFilesystemPathComponentsToDescendant:(id) descendant;
-
 - (BOOL) isHeader;
 - (NSString *) fileType;
 
 - (PBXGroup *) parentGroup;
 
 - (NSArray *) relativePathComponents;
-- (NSArray *) relativePath;
+- (NSString *) relativePath;
 
 @end
 
@@ -68,21 +65,9 @@
 
 @interface PBXGroup( HierarchyAndPaths)
 
-- (BOOL) isSourceCodeDirectory;
-
 - (NSArray *) allPossibleProjectHeaderDirectories;
-- (NSArray *) groupsToDescendant:(id) child;
-- (NSArray *) relativeFilesystemPathComponentsToDescendant:(id) descendant;
-- (NSArray *) absoluteFilesystemPathComponentsToDescendant:(id) descendant;
-- (id) descendantWithRelativeFilesystemPath:(NSString *) path;
-- (NSArray *) descendantsWithAbsoluteFilesystemPath:(NSString *) path;
 
-- (void) addChild:(PBXPathObject *) child;
-- (void) removeChild:(PBXPathObject *) child;
-- (void) moveChild:(PBXPathObject *) child
-           toGroup:(PBXGroup *) other;
 - (id) childNamed:(NSString *) name;
-- (void) setChildren:(NSArray *) children;
 
 @end
 

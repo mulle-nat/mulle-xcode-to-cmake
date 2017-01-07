@@ -1,54 +1,32 @@
 /*
-   mulle-xcode-to-cmake
+   mulle-xcode-utility
    
    $Id: PBXPathObject+HierarchyAndPaths.m,v 5e4718e4490d 2012/01/05 14:24:47 nat $
 
    Created by Nat! on 26.12.10.
    Copyright 2010 Mulle kybernetiK
    
-   This file is part of mulle-xcode-to-cmake.
+   This file is part of mulle-xcode-utility.
 
-   mulle-xcode-to-cmake is free software: you can redistribute it and/or modify
+   mulle-xcode-utility is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   mulle-xcode-to-cmake is distributed in the hope that it will be useful,
+   mulle-xcode-utility is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with mulle-xcode-to-cmake.  If not, see <http://www.gnu.org/licenses/>.
+   along with mulle-xcode-utility.  If not, see <http://www.gnu.org/licenses/>.
 */
 #import "PBXPathObject+HierarchyAndPaths.h"
 
-#import "NSObject+DecodeWithObjectStorage.h"
 #import "NSArray+Path.h"
-#import "NSTask+System.h"
-#import "NSString+XcconfigSettings.h"
-#import "Xcode.h"
 
 
 @implementation PBXPathObject( HierarchyAndPaths)
-
-- (void) setName:(NSString *) s
-{
-   NSParameterAssert( ! s || [s isKindOfClass:[NSString class]]);
-   NSParameterAssert( ! s | [s rangeOfString:@"/"].length == 0);
-   
-   [super setName:s];
-}
-
-
-- (void) setPath:(NSString *) s
-{
-   NSParameterAssert( ! s || [s isKindOfClass:[NSString class]]);
-   NSParameterAssert( ! s || (([self isGroupRelative] && ! [s isAbsolutePath]) || ! [self isGroupRelative]));
-   
-   [super setPath:s];
-}
-
 
 // returns the absolute
 - (BOOL) isVirtual
@@ -237,7 +215,7 @@
 }
 
 
-- (NSArray *) relativePath
+- (NSString *) relativePath
 {
    return( [[self relativePathComponents] componentsJoinedByString:@"."]);
 }
@@ -545,88 +523,6 @@
 }
 
 
-- (NSArray *) relativeFilesystemPathComponentsToDescendant:(id) descendant
-{
-   NSMutableArray    *pathComponents;
-   NSEnumerator      *rover;
-   PBXGroup          *group;
-   NSString          *path;
-   
-   pathComponents = [NSMutableArray array];
-   
-   rover = [[self groupsToDescendant:descendant] objectEnumerator];
-   while( group = [rover nextObject])
-   {
-      path = [group path];
-      if( [path length])
-         [pathComponents addObjectsFromArray:[path pathComponents]];
-   }
-   return( [pathComponents standardizedPathComponents]);
-}
-
-
-- (NSArray *) absoluteFilesystemPathComponentsToDescendant:(id) descendant
-{
-   NSMutableArray    *descendantComponents;
-   NSMutableArray    *pathComponents;
-  
-   descendantComponents = [self relativeFilesystemPathComponentsToDescendant:descendant];
-   if( ! descendantComponents)
-      return( nil);
-   
-   pathComponents = [[[self absoluteFilesystemPathComponents] mutableCopy] autorelease];
-   [pathComponents addObjectsFromArray:descendantComponents];
-   [pathComponents standardizedPathComponents];
-   return( pathComponents);
-}
-
-
-- (void) addChild:(PBXPathObject *) child
-{
-   NSMutableArray  *children;
-   NSArray         *array;
-   
-   array = [self children];
-   if( ! array)
-      children = [NSMutableArray array];
-   else
-      children = [[array mutableCopy] autorelease];
-   
-   NSParameterAssert( [children indexOfObjectIdenticalTo:child] == NSNotFound);
-   
-   [children addObject:child];
-   [self setChildren:children];
-}
-
-
-- (void) removeChild:(PBXPathObject *) child
-{
-   NSMutableArray  *children;
-   unsigned int    i;
-   
-   children = [[[self children] mutableCopy] autorelease];
-   i        = [children indexOfObjectIdenticalTo:child];
-   if( i == NSNotFound)
-      return;
-      
-   [[child retain] autorelease];
-   [children removeObjectAtIndex:i];
-   [self setChildren:children];
-}
-
-
-- (void) moveChild:(PBXPathObject *) child
-           toGroup:(PBXGroup *) other;
-{
-   NSParameterAssert( [other isKindOfClass:[PBXGroup class]]);
-   
-   if( self == other)
-      return;
-      
-   [self removeChild:child];
-   [other addChild:child];
-}
-
 
 - (id) childNamed:(NSString *) name
 {
@@ -640,49 +536,6 @@
    return( child);
 }
 
-
-- (id) descendantWithRelativeFilesystemPath:(NSString *) path
-{
-   NSEnumerator   *rover;
-   id             child;
-   id             descendant;
-   
-   if( descendant = [super descendantWithRelativeFilesystemPath:path])
-      return( descendant);
-      
-   rover = [[self children] objectEnumerator];
-   while( child = [rover nextObject])
-   {
-      if( descendant = [child descendantWithRelativeFilesystemPath:path])
-         return( descendant);
-   }
-   return( nil);
-}
-
-
-- (NSArray *) descendantsWithAbsoluteFilesystemPath:(NSString *) path
-{
-   NSEnumerator    *rover;
-   id              child;
-   id              descendants;
-   NSMutableArray  *array;
-   
-   array = nil;
-   if( descendants = [super descendantsWithAbsoluteFilesystemPath:path])
-      array = [NSMutableArray arrayWithArray:descendants];
-      
-   rover = [[self children] objectEnumerator];
-   while( child = [rover nextObject])
-   {
-      if( descendants = [child descendantsWithAbsoluteFilesystemPath:path])
-      {
-         if( ! array)
-            array = [NSMutableArray array];
-         [array addObjectsFromArray:descendants];
-      }
-   }
-   return( array);
-}
 
 @end
 

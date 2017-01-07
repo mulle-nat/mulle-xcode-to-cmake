@@ -5,7 +5,7 @@
 PROJECT=MulleXcodeSettings
 TARGET=mulle-xcode-settings
 HOMEPAGE="http://www.mulle-kybernetik.com/software/git/${TARGET}"
-DESC="Edit Xcode build settings from the command line"
+DESC="Convert Xcode projects to cmake CMakeLists.txt "
 AGVTAG="`agvtool what-version -terse 2> /dev/null`"
 
 VERSION="${1:-$AGVTAG}"

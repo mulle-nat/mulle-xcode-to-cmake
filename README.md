@@ -1,17 +1,16 @@
-# mulle-xcode-settings
+# mulle-xcode-to-cmake
 
-A little tool to set Xcode build settings from the command line.
+A little tool convert Xcode projects to cmake CMakeLists.txt
 
-You can specify the target and the configuration to set. If you don't
-specify a target, the setting is changed in the project. If you don't
-specify a configuration, the setting will be applied to all configurations.
+You can specify the target to export. If you don't specify a target, 
+all targets are exported. 
 
-Therefore when you specify a target and a configuration only the setting in
-that target for that configuration is affected.
+It doesn't do a perfect job, but it's better than doing it all by hand.
+
 
 Fork      |  Build Status | Master Version
 ----------|---------------|-----------------------------------
-[Mulle kybernetiK](//github.com/mulle-nat/mulle-xcode-settings) | [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-settings) | ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-nat/mulle-xcode-settings.svg) [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-settings.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-settings)
+[Mulle kybernetiK](//github.com/mulle-nat/mulle-xcode-to-cmake) | [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake) | ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-nat/mulle-xcode-to-cmake.svg) [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake)
 
 
 ## Install
@@ -20,89 +19,90 @@ Use the [homebrew](//brew.sh) package manager to install it, or build
 it yourself with Xcode:
 
 ```
-brew install mulle-kybernetik/software/mulle-xcode-settings
+brew install mulle-kybernetik/software/mulle-xcode-to-cmake
 ```
 
 
 ## Usage
 
 ```
-usage: mulle-xcode-settings [options] <commands> <file.xcodeproj>
+usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>
 
 Options:
-   -c <configuration>          : configuration to set
-   -t <target>                 : target to set
-   -a                          : set on all targets
+	-t <target> : target to export
+	-b          : don't export mulle-bootstrap support
 
 Commands:
-   list                        : list all keys
-   get     <key>               : get value for key
-   set     <key> <value>       : sets key to value
-   add     <key> <value>       : adds value to key
-   insert  <key> <value>       : inserts value in front of key
-   remove  <key> <value>       : removes value from key
-   replace <key> <old> <value> : replace old value for key (if exists)
+	export      : export CMakeLists.txt to stdout
+	list        : list targets
 
 Environment:
-   VERBOSE                     : dump some info to stderr
+	VERBOSE     : dump some info to stderr
 ```
 
 ### Examples
 
-List all current non-default project settings:
+List all project targets:
 
 ```console
-$ mulle-xcode-settings list mulle-xcode-settings.xcodeproj
-Targets:
-   mulle-xcode-settings
-   mullepbx
-Project:
-   Debug:
-      CLANG_WARN_DIRECT_OBJC_ISA_USAGE="NO"
-      CURRENT_PROJECT_VERSION="1.1.0"
-      DEBUG_INFORMATION_FORMAT="dwarf"
-      DYLIB_COMPATIBILITY_VERSION="$(CURRENT_PROJECT_VERSION)"
-      DYLIB_CURRENT_VERSION="1.0.0"
-      GCC_OPTIMIZATION_LEVEL="0"
-      MACOSX_DEPLOYMENT_TARGET="10.4"
-      OTHER_CFLAGS="-DCURRENT_PROJECT_VERSION=\"${CURRENT_PROJECT_VERSION}\""
-   Release:
-      CLANG_WARN_DIRECT_OBJC_ISA_USAGE="NO"
-      CURRENT_PROJECT_VERSION="1.1.0"
-      DEBUG_INFORMATION_FORMAT="dwarf"
-      DYLIB_COMPATIBILITY_VERSION="$(CURRENT_PROJECT_VERSION)"
-      DYLIB_CURRENT_VERSION="1.0.0"
-      GCC_GENERATE_DEBUGGING_SYMBOLS="NO"
-      MACOSX_DEPLOYMENT_TARGET="10.4"
-      OTHER_CFLAGS="-DCURRENT_PROJECT_VERSION=\"${CURRENT_PROJECT_VERSION}\""
+$ mulle-xcode-to-cmake list mulle-xcode-to-cmake.xcodeproj
+mulle-xcode-to-cmake
+mullepbx
 ```
 
-List all non-default project settings for target `mullepbx`:
+Create "CMakeLists.txt" for target `mullepbx` leaving out some 
+boilerplate template code:
 
 ```console
-$ mulle-xcode-settings -t mullepbx list mulle-xcode-settings.xcodeproj
-mullepbx:
-   Debug:
-      EXECUTABLE_PREFIX="lib"
-      PRODUCT_NAME="$(TARGET_NAME)"
-   Release:
-      EXECUTABLE_PREFIX="lib"
-      PRODUCT_NAME="$(TARGET_NAME)"
-```
+$ mulle-xcode-to-cmake -b -t mullepbx export mulle-xcode-to-cmake.xcodeproj
+project( mulle-xcode-to-cmake)
 
-Change a setting in target `mullepbx` for configuration **Release**:
+cmake_minimum_required (VERSION 3.4)
 
-```console
-$ mulle-xcode-settings -t mullepbx -c Debug set PRODUCT_NAME 'My Foo' mulle-xcode-settings.xcodeproj
-```
+set( MULLEPBX_PUBLIC_HEADERS
+src/PBXWriting/MullePBXArchiver.h
+src/PBXReading/MullePBXUnarchiver.h
+src/PBXReading/PBXObject.h
+src/PBXWriting/PBXObject+PBXEncoding.h
+)
 
+set( MULLEPBX_PROJECT_HEADERS
+)
 
-Add a setting to the project then remove it again, leaving previous setting
-unperturbed:
+set( MULLEPBX_PRIVATE_HEADERS
+src/PBXWriting/MulleSortedKeyDictionary.h
+src/PBXReading/NSObject+DecodeWithObjectStorage.h
+src/PBXReading/NSString+KeyFromSetterSelector.h
+src/PBXReading/NSString+LeadingDotExpansion.h
+src/PBXReading/PBXProjectProxy.h
+)
 
-```console
-$ mulle-xcode-settings add HEADER_SEARCH_PATHS '/usr/local/include' ./X.xcodeproj
-$ mulle-xcode-settings remove HEADER_SEARCH_PATHS '/usr/local/include' ./X.xcodeproj
+set( MULLEPBX_SOURCES
+src/PBXWriting/MullePBXArchiver.m
+src/PBXReading/MullePBXUnarchiver.m
+src/PBXWriting/MulleSortedKeyDictionary.m
+src/PBXReading/PBXObject.m
+src/PBXWriting/PBXObject+PBXEncoding.m
+src/PBXReading/PBXProjectProxy.m
+src/PBXReading/NSObject+DecodeWithObjectStorage.m
+src/PBXReading/NSString+KeyFromSetterSelector.m
+src/PBXReading/NSString+LeadingDotExpansion.m
+)
+
+add_library( mullepbx STATIC
+${SOURCES}
+${PUBLIC_HEADERS}
+${PROJECT_HEADERS}
+${PRIVATE_HEADERS}
+)
+
+target_link_libraries( mullepbx
+${STATIC_DEPENDENCIES}
+${DEPENDENCIES}
+)
+
+install( TARGETS mullepbx DESTINATION "lib")
+install( FILES ${PUBLIC_HEADERS} DESTINATION "include/mullepbx")
 ```
 
 
@@ -113,47 +113,10 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 ### Releasenotes
 
 
-#### 1.1.1
+# 0.0
 
-* Had to say good bye to **isa**
+* Quickly hacked together from mulle-xcode-settings.
 
-#### 1.1.0
-
-* Added **list** command, which makes `mulle-xcode-settings` easier to use.
-
-
-#### 1.0.6
-
-* Changed option handling to -<short> and --<long> (but keep old flags for
-  compatibility.
-
-
-#### 1.0.5
-
-* Added -alltargets
-* Added -help
-
-
-#### 1.0.4
-
-* Adding a string to another string, creates a proper array of strings.
-        (If the string isn't a duplicate).
-        New command "insert" like add, but adds in front of previous value(s).
-
-
-#### 1.0.3
-
-* Fix moar compile problems that turned up in brew (why not earlier ?)
-
-
-#### 1.0.2
-
-* Fix some compile problems that turned up in brew (why not earlier ?)
-
-
-#### 1.0.1
-
-* Fixed a crasher due to multi-value settings
 
 
 ### Author

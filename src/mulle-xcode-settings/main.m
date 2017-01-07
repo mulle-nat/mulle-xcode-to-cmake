@@ -1,61 +1,94 @@
 /*
- mulle-xcode-settings
+ mulle-xcode-to-cmake
  
- $Id: utility-main.m,v 71cb8aaa9ef7 2011/12/21 14:00:39 nat $
+ Created by Nat! on 7.1.17
+ Copyright 2017 Mulle kybernetiK
  
- Created by Nat! on 06.10.15
- Copyright 2015 Mulle kybernetiK
+ This file is part of mulle-xcode-to-cmake
  
- This file is part of mulle-xcode-settings
- 
- mulle-xcode-settings is free software: you can redistribute it and/or modify
+ mulle-xcode-to-cmake is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
  
- mulle-xcode-settings is distributed in the hope that it will be useful,
+ mulle-xcode-to-cmake is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with mulle-xcode-settings.  If not, see <http://www.gnu.org/licenses/>.
+ along with mulle-xcode-to-cmake.  If not, see <http://www.gnu.org/licenses/>.
  */
 #import <Foundation/Foundation.h>
 
 #import "MullePBXArchiver.h"
 #import "MullePBXUnarchiver.h"
 #import "PBXObject.h"
+#import "PBXHeadersBuildPhase+Export.h"
+#import "PBXPathObject+HierarchyAndPaths.h"
+#import "NSString+ExternalName.h"
+
 
 static BOOL   verbose;
+static BOOL   suppress;
+
+static NSMutableDictionary  *staticLibraries;
+static NSMutableDictionary  *sharedLibraries;
+
+
+static void   addSharedLibrariesToFind( NSString *name, NSString *library)
+{
+   if( ! sharedLibraries)
+      sharedLibraries = [NSMutableDictionary dictionary];
+   [sharedLibraries setObject:library
+                       forKey:name];
+}
+
+static void   addStaticLibrariesToFind( NSString *name, NSString *library)
+{
+   if( ! staticLibraries)
+      staticLibraries = [NSMutableDictionary dictionary];
+   [staticLibraries setObject:library
+                       forKey:name];
+}
+
 
 static void   usage()
 {
    fprintf( stderr,
-           "usage: mulle-xcode-settings [options] <commands> <file.xcodeproj>\n"
+           "usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>\n"
            "\n"
            "Options:\n"
            ""
-           "\t-c <configuration>          : configuration to set\n"
-           "\t-t <target>                 : target to set\n"
-           "\t-a                          : set on all targets\n"
+           "\t-t <target> : target to export\n"
+           "\t-b          : don't export mulle-bootstrap support\n"
            "\n"
            "Commands:\n"
-           "\tlist                        : list all keys\n"
-           "\tget     <key>               : get value for key\n"
-           "\tset     <key> <value>       : sets key to value\n"
-           "\tadd     <key> <value>       : adds value to key\n"
-           "\tinsert  <key> <value>       : inserts value in front of key\n"
-           "\tremove  <key> <value>       : removes value from key\n"
-           "\treplace <key> <old> <value> : replace old value for key (if exists)\n"
+           "\texport      : export CMakeLists.txt to stdout\n"
+           "\tlist        : list targets\n"
            "\n"
            "Environment:\n"
-           "\tVERBOSE                     : dump some info to stderr\n"
+           "\tVERBOSE     : dump some info to stderr\n"
          );
    
    exit( 1);
 }
 
+
+// https://stackoverflow.com/questions/1656410/strip-non-alphanumeric-characters-from-an-nsstring
+
+static NSString   *makeMacroName( NSString *s)
+{
+   NSCharacterSet   *set;
+   
+   set = [[NSCharacterSet alphanumericCharacterSet] invertedSet];
+   s   = [[s componentsSeparatedByCharactersInSet:set] componentsJoinedByString:@"_"];
+
+   s   = [NSString externalNameForInternalName:s
+                                 separatorString:@"_"
+                                      useAllCaps:YES];
+   return( [s uppercaseString]);
+}
 
 static PBXTarget   *find_target_by_name( PBXProject *root, NSString *name)
 {
@@ -83,29 +116,11 @@ static void   list_target_names( PBXProject *root)
 }
 
 
-static XCBuildConfiguration  *find_configuration_by_name( PBXObjectWithConfigurationList *root, NSString *name)
-{
-   NSEnumerator            *rover;
-   XCBuildConfiguration    *pbxconfiguration;
-   
-   rover = [[root buildConfigurations] objectEnumerator];
-   while( pbxconfiguration = [rover nextObject])
-      if( [[pbxconfiguration name] isEqualToString:name])
-         break;
-   
-   return( pbxconfiguration);
-}
-
 
 enum Command
 {
-   Add,
-   Get,
-   Insert,
-   List,
-   Remove,
-   Replace,
-   Set
+   Export,
+   List
 };
 
 
@@ -121,364 +136,494 @@ static void  fail( NSString *format, ...)
 }
 
 
-static void   hackit_array( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, id value, id old, NSMutableDictionary *settings, id prevValue)
+
+static void   export_files( NSArray *files,
+                            NSString *name,
+                            enum Command cmd)
 {
-   NSEnumerator  *rover;
-   NSString      *s;
-   NSUInteger    index;
+   NSEnumerator      *rover;
+   PBXBuildFile      *file;
+   PBXFileReference  *reference;
+   NSString          *path;
    
-   NSCParameterAssert( [prevValue isKindOfClass:[NSArray class]]);
-
-   if( cmd != Set)
-      prevValue = [[prevValue mutableCopy] autorelease];
-   
-   switch( cmd)
+   if( cmd == Export)
    {
-   case Get:
-      printf( "%s\n", prevValue ? [[prevValue description] UTF8String] : "<null>");
-      return;
-         
-   case Add    :
-      if( [prevValue containsObject:value])
-      {
-         if( verbose)
-            fprintf( stderr, "value is already present\n");
-         return;
-      }
-
-      if( verbose)
-         fprintf( stderr, "adding %s to %s for key %s\n",
-               [[value description] UTF8String],
-               [[prevValue description] UTF8String],
-               [key UTF8String]);
-
-      [prevValue addObject:value];
-      value = prevValue;
-      break;
-
-   case Insert :
-      if( [prevValue containsObject:value])
-      {
-         if( verbose)
-            fprintf( stderr, "value is already present\n");
-         return;
-      }
-
-      if( verbose)
-         fprintf( stderr, "insert %s into %s for key %s\n",
-               [[value description] UTF8String],
-               [[prevValue description] UTF8String],
-               [key UTF8String]);
-
-      [prevValue insertObject:value
-                      atIndex:0];
-      value = prevValue;
-      break;
-
-   case Set:
-      value = [NSArray arrayWithObject:value];
-      if( verbose)
-         fprintf( stderr, "set %s for key %s\n",
-               [[value description] UTF8String],
-               [key UTF8String]);
-      break;
-
-   case Replace :
-      index = [prevValue indexOfObject:old];
-      if( index == NSNotFound)
-      {
-         if( verbose)
-            fprintf( stderr, "old value is not present\n");
-         return;
-      }
+      printf( "\nset( %s\n", [name UTF8String]);
+   }
    
-      if( verbose)
-         fprintf( stderr, "replace %s with %s from %s for key %s\n",
-               [[old description] UTF8String],
-               [[value description] UTF8String],
-               [[prevValue description] UTF8String],
-               [key UTF8String]);
-         
-      [prevValue replaceObjectAtIndex:index
-                           withObject:value];
-      value = prevValue;
-      break;
-         
-   case Remove :
-      if( ! [prevValue containsObject:value])
-      {
-         if( verbose)
-            fprintf( stderr, "value is not present\n");
-         return;
-      }
-
-      if( verbose)
-         fprintf( stderr, "remove %s from %s for key %s\n",
-               [[value description] UTF8String],
-               [[prevValue description] UTF8String],
-               [key UTF8String]);
-   
-      [prevValue removeObject:value];
-      value = prevValue;
-      break;
+   rover = [files objectEnumerator];
+   while( file = [rover nextObject])
+   {
+      reference = [file fileRef];
+      path      = [reference sourceTreeRelativeFilesystemPath];
+      if( ! path)
+         path = [reference displayName]; // hack (should be path)
+      printf( "%s\n", [path UTF8String]);
    }
 
-   if( [value count])
-      [settings setObject:value
-                   forKey:key];
-   else
-      [settings removeObjectForKey:key];
-   
-   [xcconfiguration setObject:settings
-                       forKey:@"buildSettings"];
+   if( cmd == Export)
+      printf( ")\n");
 }
 
 
-static void   hackit_string( XCBuildConfiguration *xcconfiguration, enum Command cmd,  NSString *key, id value, id old, NSMutableDictionary *settings, NSString *prevValue)
+static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
+                                   enum Command cmd,
+                                   NSString *prefix)
 {
-   NSRange   range;
-   NSRange   range2;
-   NSArray   *array;
+   NSString  *name;
    
-   if( ! [prevValue length])
-      prevValue = nil;
+   name = @"PUBLIC_HEADERS";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   export_files( [pbxphase publicHeaders], name, cmd);
 
-   if( ! [value length])
-   {
-      value = nil;
-      range = NSMakeRange( 0, 0);
-   }
-   else
-      range = [prevValue rangeOfString:value];
-   
-   switch( cmd)
-   {
-   case Get:
-      printf( "%s\n", prevValue ? [[prevValue description] UTF8String] : "<null>");
-      return;
+   name = @"PROJECT_HEADERS";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   export_files( [pbxphase projectHeaders], name, cmd);
 
-   case Add :
-      if( prevValue)
-      {
-         if( range.length == [prevValue length])  // or what ?
-         {
-            if( verbose)
-               fprintf( stderr, "value already set\n");
-            return;
-         }
-
-         if( verbose)
-            fprintf( stderr, "add %s after %s for key %s\n",
-                  [[value description] UTF8String],
-                  [[prevValue description] UTF8String],
-                  [key UTF8String]);
-      
-         if( value)
-         {
-            value = [NSArray arrayWithObjects:prevValue, value, nil];
-            if( verbose)
-               fprintf( stderr, "promoting to array\n");
-         }
-         break;
-      }
-      if( verbose)
-         fprintf( stderr, "set %s for key %s\n",
-                  [[value description] UTF8String],
-                  [key UTF8String]);
-      break;
-         
-   case Insert  :
-      if( prevValue)
-      {
-         if( range.length == [prevValue length])  // or what ?
-         {
-            if( verbose)
-               fprintf( stderr, "value already set\n");
-            return;
-         }
-      
-         if( verbose)
-            fprintf( stderr, "insert %s before %s for key %s\n",
-                  [[value description] UTF8String],
-                  [[prevValue description] UTF8String],
-                  [key UTF8String]);
-         if( value)
-         {
-            value = [NSArray arrayWithObjects:value, prevValue, nil];
-            if( verbose)
-               fprintf( stderr, "promoting to array\n");
-         }
-         break;
-      }
-      // fall thru
-   case Set:
-      if( verbose)
-         fprintf( stderr, "set %s for key %s\n",
-                  [[value description] UTF8String],
-                  [key UTF8String]);
-      break;
-
-   case Replace :
-      if( ! prevValue)
-      {
-         if( verbose)
-            fprintf( stderr, "nothing to replace\n");
-         return;
-      }
-
-      range = [prevValue rangeOfString:old];
-      if( range.length != [prevValue length])
-      {
-         if( verbose)
-            fprintf( stderr, "old value doesnt match\n");
-         return;
-      }
-
-      if( verbose)
-         fprintf( stderr, "replace %s with %s for key %s\n",
-               [[old description] UTF8String],
-               [[value description] UTF8String],
-               [key UTF8String]);
-      break;
-      
-   case Remove :
-      if( range.length != [prevValue length])
-      {
-         if( verbose)
-            fprintf( stderr, "value doesnt match\n");
-         return;
-      }
-      
-      if( verbose)
-         fprintf( stderr, "remove %s for key %s\n",
-               [[value description] UTF8String],
-               [key UTF8String]);
-
-      value = nil;
-      break;
-   }
-
-   if( value)
-      [settings setObject:value
-                   forKey:key];
-   else
-      [settings removeObjectForKey:key];
-   
-   [xcconfiguration setObject:settings
-                       forKey:@"buildSettings"];
+   name = @"PRIVATE_HEADERS";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   export_files( [pbxphase privateHeaders], name, cmd);
 }
 
 
-static void   hackit( XCBuildConfiguration *xcconfiguration, enum Command cmd, NSString *key, NSString *value, NSString *old)
+static void   export_sources_phase( PBXSourcesBuildPhase *pbxphase,
+                                    enum Command cmd,
+                                    NSString *prefix)
 {
-   id             settings;
-   id             prevValue;
-   NSEnumerator   *rover;
+   NSString  *name;
    
-   if( verbose)
-      fprintf( stderr, "%s\n", [[xcconfiguration name] UTF8String]);
+   name = @"SOURCES";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   export_files( [pbxphase files], name, cmd);
+}
 
-   settings = [xcconfiguration buildSettings];
-   if( cmd == List)
+
+
+static void   export_libraries( PBXFrameworksBuildPhase *pbxphase,
+                                enum Command cmd,
+                                NSString *prefix,
+                                BOOL isStatic)
+{
+   NSEnumerator      *rover;
+   PBXBuildFile      *file;
+   PBXFileReference  *reference;
+   NSString          *path;
+   NSString          *name;
+   NSString          *libraryName;
+   
+   name = isStatic ? @"STATIC_DEPENDENCIES" : @"DEPENDENCIES";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   
+   if( cmd == Export)
    {
-      rover = [[[settings allKeys] sortedArrayUsingSelector:@selector( caseInsensitiveCompare:)] objectEnumerator];
-
-      printf( "\t%s:\n", [[xcconfiguration name] UTF8String]);
-      while( key = [rover nextObject])
+      printf( "\nset( %s\n", [name UTF8String]);
+   }
+   
+   rover = [[pbxphase files] objectEnumerator];
+   while( file = [rover nextObject])
+   {
+      reference = [file fileRef];
+      path      = [[reference path] lastPathComponent];
+      path      = [path stringByDeletingPathExtension];
+      if( [path hasPrefix:@"lib"])
+         path = [path substringFromIndex:3];
+      
+      libraryName = makeMacroName( path);
+      
+      if( [[[reference path] pathExtension] isEqualToString:@"a"])
       {
-         prevValue = [settings objectForKey:key];
-         printf( "\t\t%s=\"%s\"\n",
-                  [key UTF8String],
-                  [[prevValue description] UTF8String]);
+         if( isStatic)
+         {
+            printf( "${%s_LIBRARY}\n", [libraryName UTF8String]);
+            addStaticLibrariesToFind( path, libraryName);
+         }
       }
-      return;
+      else
+         if( ! isStatic)
+         {
+            printf( "${%s_LIBRARY}\n", [libraryName UTF8String]);
+            addSharedLibrariesToFind( path, libraryName);
+         }
    }
 
-   prevValue = [settings objectForKey:key];
-   if( verbose)
-      fprintf( stderr, "old: %s = %s\n",
-          [key UTF8String], [[prevValue description] UTF8String]);
-   
-   settings = [[settings mutableCopy] autorelease];
-   if( [prevValue isKindOfClass:[NSArray class]])
-   {
-      hackit_array( xcconfiguration, cmd, key, value, old, settings, prevValue);
-      return;
-   }
-   hackit_string( xcconfiguration, cmd, key, value, old, settings, prevValue);
+   if( cmd == Export)
+      printf( ")\n");
 }
 
 
-static void   _setting_hack( PBXObjectWithConfigurationList *obj,
-                             enum Command cmd,
-                             NSString *key,
-                             NSString *value,
-                             NSString *old,
-                             NSString *configuration)
+static void   export_frameworks_phase( PBXFrameworksBuildPhase *pbxphase,
+                                       enum Command cmd,
+                                       NSString *prefix)
 {
-   PBXTarget              *pbxtarget;
-   XCBuildConfiguration   *xcconfiguration;
-   NSEnumerator           *rover;
-
-   if( verbose)
-      fprintf( stderr, "object: %s\n", [[obj name] UTF8String]);
-   
-   if( cmd == List)
-      printf( "%s:\n", [[obj name] UTF8String]);
-   
-   if( configuration)
-   {
-      xcconfiguration = find_configuration_by_name( obj, configuration);
-      if( ! xcconfiguration)
-         fail( @"configuration \"%@\" not found", configuration);
-
-      hackit( xcconfiguration, cmd, key, value, old);
-      return;
-   }
-
-   rover = [[obj buildConfigurations] objectEnumerator];
-   while( xcconfiguration = [rover nextObject])
-      hackit( xcconfiguration, cmd, key, value, old);
+   export_libraries( pbxphase, cmd, prefix, YES);
+   export_libraries( pbxphase, cmd, prefix, NO);
 }
 
 
-static void   setting_hack( PBXProject *root,
+static void   export_phase( PBXBuildPhase *pbxphase,
                             enum Command cmd,
-                            NSString *key,
-                            NSString *value,
-                            NSString *old,
-                            NSString *configuration,
-                            NSString *target)
+                            NSString *prefix)
+{
+   if( verbose)
+      fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxphase class]) UTF8String], [[pbxphase name] UTF8String]);
+   
+   if( [pbxphase isKindOfClass:[PBXHeadersBuildPhase class]])
+   {
+      export_headers_phase( (PBXHeadersBuildPhase *) pbxphase, cmd, prefix);
+      return;
+   }
+
+   if( [pbxphase isKindOfClass:[PBXSourcesBuildPhase class]])
+   {
+      export_sources_phase( (PBXSourcesBuildPhase *) pbxphase, cmd, prefix);
+      return;
+   }
+
+   if( [pbxphase isKindOfClass:[PBXFrameworksBuildPhase class]])
+   {
+      export_frameworks_phase( (PBXFrameworksBuildPhase *) pbxphase, cmd, prefix);
+      return;
+   }
+}
+
+
+static void   file_exporter( PBXTarget *pbxtarget,
+                             enum Command cmd,
+                             BOOL all)
+{
+   PBXBuildPhase   *phase;
+   NSEnumerator    *rover;
+
+   if( verbose)
+      fprintf( stderr, "target: %s\n", [[pbxtarget name] UTF8String]);
+   
+   if( cmd == List)
+   {
+      printf( "%s\n", [[pbxtarget name] UTF8String]);
+      return;
+   }
+   
+   rover = [[pbxtarget buildPhases] objectEnumerator];
+   while( phase = [rover nextObject])
+   {
+      export_phase( phase, cmd, makeMacroName( [pbxtarget name]));
+   }
+}
+
+
+
+static void   export_dependency( PBXTargetDependency *pbxdependency,
+                                 enum Command cmd,
+                                 PBXTarget *pbxtarget)
+{
+   NSString  *dependencyCMakeName;
+   
+   if( verbose)
+      fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxdependency class]) UTF8String], [[pbxdependency name] UTF8String]);
+   
+   if( cmd != Export)
+      return;
+
+   printf( "\nadd_dependencies( %s %s);\n",
+          [[pbxtarget name] UTF8String],
+          [[[pbxdependency target] name] UTF8String]);
+}
+
+
+static void   print_prefixed_variable_expansion( NSString *name, NSString *prefix, BOOL flag)
+{
+   if( flag)
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   printf( "${%s}\n", [name UTF8String]);
+}
+
+
+static void   target_exporter( PBXTarget *pbxtarget,
+                               enum Command cmd,
+                               BOOL all)
+{
+   PBXTargetDependency   *dependency;
+   NSEnumerator          *rover;
+   NSString              *name;
+   NSString              *staticName;
+   NSString              *type;
+   NSString              *macroName;
+   char                  *format;
+   
+   if( verbose)
+      fprintf( stderr, "target: %s\n", [[pbxtarget name] UTF8String]);
+   
+   macroName = makeMacroName( [pbxtarget name]);
+   type      = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
+   
+
+   if( [type isEqualToString:@"library.static"])
+   {
+      printf( "\nadd_library( %s STATIC\n", [[pbxtarget name] UTF8String]);
+   }
+   else
+      if( [type hasPrefix:@"library"] || [type hasPrefix:@"framework"])
+      {
+         printf( "\nadd_library( %s SHARED\n", [[pbxtarget name] UTF8String]);
+      }
+      else
+      {
+         printf( "\nadd_executable( %s\n", [[pbxtarget name] UTF8String]);
+      }
+   
+   print_prefixed_variable_expansion( @"SOURCES", macroName, all);
+   print_prefixed_variable_expansion( @"PUBLIC_HEADERS", macroName, all);
+   print_prefixed_variable_expansion( @"PROJECT_HEADERS", macroName, all);
+   print_prefixed_variable_expansion( @"PRIVATE_HEADERS", macroName, all);
+   
+   printf( ")\n");
+   
+   rover = [[pbxtarget dependencies] objectEnumerator];
+   while( dependency = [rover nextObject])
+   {
+      export_dependency( dependency, cmd, pbxtarget);
+   }
+   
+   staticName = @"STATIC_DEPENDENCIES";
+   if( all)
+      staticName = [NSString stringWithFormat:@"%@_%@", macroName, staticName];
+
+   name = @"DEPENDENCIES";
+   if( all)
+      name = [NSString stringWithFormat:@"%@_%@", macroName, name];
+
+   if( ! suppress)
+      format = "\ntarget_link_libraries( %s\n"
+"${BEGIN_ALL_LOAD}\n"
+"${%s}\n"
+"${END_ALL_LOAD}\n"
+"${%s}\n"
+")\n";
+   else
+      format = "\ntarget_link_libraries( %s\n"
+"${%s}\n"
+"${%s}\n"
+")\n";
+
+   printf( format,
+         [[pbxtarget name] UTF8String],
+         [staticName UTF8String],
+         [name UTF8String]);
+   printf( "\ntarget_link_libraries( %s\n"
+"${BEGIN_ALL_LOAD}\n"
+"${%s}\n"
+"${END_ALL_LOAD}\n"
+"${%s}\n"
+")\n",
+         [[pbxtarget name] UTF8String],
+         [staticName UTF8String],
+         [name UTF8String]);
+   
+   name = @"PUBLIC_HEADERS";
+   if( all)
+      name = [NSString stringWithFormat:@"%@_%@", macroName, name];
+   
+   if( [type hasPrefix:@"framework"])
+   {
+      printf( "\n"
+"if (APPLE)\n");
+
+      if( ! suppress)
+         printf(
+"   set(BEGIN_ALL_LOAD \"-all_load\")\n"
+"   set(END_ALL_LOAD)\n"
+"\n");
+
+         printf(
+"   set_target_properties( %s PROPERTIES\n"
+"     FRAMEWORK TRUE\n"
+"     FRAMEWORK_VERSION A\n"
+"     # MACOSX_FRAMEWORK_IDENTIFIER \"com.mulle-kybernetik.%s\"\n"
+"     # VERSION \"0.0.0\"\n"
+"     # SOVERSION  \"0.0.0\"\n"
+"     PUBLIC_HEADER \"${%s}\"\n"
+")\n"
+"\n"
+"    install( TARGETS %s DESTINATION \"Frameworks\")\n",
+         [[pbxtarget name] UTF8String],
+         [[pbxtarget name] UTF8String],
+         [name UTF8String],
+         [[pbxtarget name] UTF8String]);
+   }
+   else
+      if( [type hasPrefix:@"library"])
+      {
+         printf( "\n"
+"install( TARGETS %s DESTINATION \"lib\")\n"
+"install( FILES ${%s} DESTINATION \"include/%s\")\n",
+         [[pbxtarget name] UTF8String],
+         [name UTF8String],
+         [[pbxtarget name] UTF8String]);
+      }
+}
+
+
+static void   export_find_libraries( NSDictionary *libraries)
+{
+   NSArray        *keys;
+   NSEnumerator   *rover;
+   NSString       *key;
+   NSString       *library;
+   
+   keys = [[libraries allKeys] sortedArrayUsingSelector:@selector( compare:)];
+   if( [keys count])
+      printf( "\n");
+   
+   rover = [keys objectEnumerator];
+   while( key = [rover nextObject])
+   {
+      library = [libraries objectForKey:key];
+      printf( "find_library( %s_LIBRARY %s)\n", [library UTF8String], [key UTF8String]);
+   }
+}
+
+
+static void   exporter( PBXProject *root,
+                        enum Command cmd,
+                        NSString *target,
+                        NSString *file)
 {
    PBXTarget                        *pbxtarget;
-   XCBuildConfiguration             *xcconfiguration;
    PBXObjectWithConfigurationList   *obj;
    NSEnumerator                     *rover;
 
-   obj = root;
+   if( cmd == Export)
+   {
+      printf( "project( %s)\n", [[[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension] UTF8String]);
+
+      // cross platform wise 3.5 gave me the least trouble
+      printf( "\ncmake_minimum_required (VERSION 3.4)\n");
+      
+      if( ! suppress)
+      {
+         printf( "\n"
+"#\n"
+"# mulle-bootstrap environment\n"
+"#\n"
+"\n"
+"# check if compiling with mulle-bootstrap (works since 2.6)\n"
+"\n"
+"if( NOT MULLE_BOOTSTRAP_VERSION)\n"
+"  include_directories( BEFORE SYSTEM\n"
+"dependencies/include\n"
+"addictions/include\n"
+")\n"
+"\n"
+"  set( CMAKE_FRAMEWORK_PATH\n"
+"dependencies/Frameworks\n"
+"addictions/Frameworks\n"
+"${CMAKE_FRAMEWORK_PATH}\n"
+")\n"
+"\n"
+"  set( CMAKE_LIBRARY_PATH\n"
+"dependencies/lib\n"
+"addictions/lib\n"
+"${CMAKE_LIBRARY_PATH}\n"
+")\n"
+"\n"
+"endif()\n"
+"\n");
+      }
+      
+      if( ! suppress)
+      {
+         printf( "\n"
+"#\n"
+"# Platform specific definitions\n"
+"#\n"
+"\n"
+"if( APPLE)\n"
+"   # # CMAKE_OSX_SYSROOT must be set for CMAKE_OSX_DEPLOYMENT_TARGET (cmake bug)\n"
+"   # if( NOT CMAKE_OSX_SYSROOT)\n"
+"   #    set( CMAKE_OSX_SYSROOT \"/\" CACHE STRING \"SDK for OSX\" FORCE)   # means current OS X\n"
+"   # endif()\n"
+"   # \n"
+"   # # baseline set to 10.6 for rpath\n"
+"   # if( NOT CMAKE_OSX_DEPLOYMENT_TARGET)\n"
+"   #   set(CMAKE_OSX_DEPLOYMENT_TARGET \"10.6\" CACHE STRING \"Deployment target for OSX\" FORCE)\n"
+"   # endif()\n"
+"\n"
+"   set( CMAKE_POSITION_INDEPENDENT_CODE FALSE)\n"
+"\n"
+"   set( BEGIN_ALL_LOAD \"-all_load\")\n"
+"   set( END_ALL_LOAD)\n"
+"else()\n"
+"   set( CMAKE_POSITION_INDEPENDENT_CODE TRUE)\n"
+"\n"
+"   if( WIN32)\n"
+"   # windows\n"
+"   else()\n"
+"   # linux / gcc\n"
+"      set( BEGIN_ALL_LOAD \"-Wl,--whole-archive\")\n"
+"      set( END_ALL_LOAD \"-Wl,--no-whole-archive\")\n"
+"   endif()\n"
+"endif()\n");
+      }
+   }
 
    if( target)
    {
-      if( [target isEqualToString:@"##ALL##"])
-      {
-         rover = [[root targets] objectEnumerator];
-         while( pbxtarget = [rover nextObject])
-            _setting_hack( pbxtarget, cmd, key, value, old, configuration);
-         return;
-      }
-      
       pbxtarget = find_target_by_name( root, target);
       if( ! pbxtarget)
          fail( @"target \"%@\" not found", target);
-      obj = pbxtarget;
+      file_exporter( pbxtarget, cmd, NO);
    }
    else
    {
-      if( cmd == List)
-         list_target_names( root);
+      rover = [[root targets] objectEnumerator];
+      while( pbxtarget = [rover nextObject])
+      {
+         if( cmd == Export)
+         {
+            printf( "\n"
+                   "##\n"
+                   "## %s Files\n"
+                   "##\n", [[pbxtarget name] UTF8String]);
+         }
+         file_exporter( pbxtarget, cmd, YES);
+      }
    }
+   
+   // ugliness ensues...
+   
+   if( cmd == List)
+      return;
 
-   _setting_hack( obj, cmd, key, value, old, configuration);
+   export_find_libraries( sharedLibraries);
+   export_find_libraries( staticLibraries);
+   
+   if( target)
+   {
+      pbxtarget = find_target_by_name( root, target);
+      if( ! pbxtarget)
+         fail( @"target \"%@\" not found", target);
+      target_exporter( pbxtarget, cmd, NO);
+   }
+   else
+   {
+      rover = [[root targets] objectEnumerator];
+      while( pbxtarget = [rover nextObject])
+      {
+         if( cmd == Export)
+         {
+            printf( "\n"
+                   "##\n"
+                   "## %s\n"
+                   "##\n", [[pbxtarget name] UTF8String]);
+         }
+         target_exporter( pbxtarget, cmd, YES);
+      }
+   }
 }
 
 
@@ -571,15 +716,11 @@ static int   _main( int argc, const char * argv[])
    {
       s = [arguments objectAtIndex:i];
       
-      // options
-      if(  [s isEqualToString:@"-c"] ||
-           [s isEqualToString:@"-configuration"] ||
-           [s isEqualToString:@"--configuration"])
+
+      if( [s isEqualToString:@"-b"] ||
+          [s isEqualToString:@"--no-boilerplate"])
       {
-         if( ++i >= n)
-            usage();
-         
-         configuration = [arguments objectAtIndex:i];
+         suppress = YES;
          continue;
       }
 
@@ -594,79 +735,22 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
       
-      if( [s isEqualToString:@"-a"] ||
-          [s isEqualToString:@"-alltargets"] ||
-          [s isEqualToString:@"--alltargets"])
+      // commands
+      if( [s isEqualToString:@"export"])
       {
-         target = @"##ALL##";
+         exporter( root, Export, target, file);
          continue;
       }
 
-      // commands
       if( [s isEqualToString:@"list"])
       {
-         setting_hack( root, List, nil, nil, nil, configuration, target);
-         continue;
-      }
-
-      if( ++i >= n)
-         usage();
-      
-      key = [arguments objectAtIndex:i];
-
-      if( [s isEqualToString:@"get"])
-      {
-         setting_hack( root, Get, key, nil, nil, configuration, target);
-         continue;
-      }
-
-      if( ++i >= n)
-         usage();
-      value = [arguments objectAtIndex:i];
-
-      if( [s isEqualToString:@"set"])
-      {
-         setting_hack( root, Set, key, value, nil, configuration, target);
-         continue;
-      }
-      
-      if( [s isEqualToString:@"add"])
-      {
-         setting_hack( root, Add, key, value, nil, configuration, target);
-         continue;
-      }
-
-      if( [s isEqualToString:@"insert"])
-      {
-         setting_hack( root, Insert, key, value, nil, configuration, target);
-         continue;
-      }
-
-      if( [s isEqualToString:@"remove"])
-      {
-         setting_hack( root, Remove, key, value, nil, configuration, target);
-         continue;
-      }
-      
-      if( ++i >= n)
-         usage();
-      old   = value;
-      value = [arguments objectAtIndex:i];
-
-      if( [s isEqualToString:@"replace"])
-      {
-         setting_hack( root, Replace, key, value, old, configuration, target);
+         exporter( root, List, target, file);
          continue;
       }
       
       NSLog( @"unknown command %@", s);
       usage();
    }
-   
-   plist = [MullePBXArchiver archivedPropertyListWithRootObject:root];
-   s     = [NSString stringWithFormat:@"// !$*UTF8*$!\n%@", [plist description]];
-
-   writeStringToPath( s, file);
    
    return( 0);
 }

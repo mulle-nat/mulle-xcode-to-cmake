@@ -17,7 +17,10 @@
 		4167125E1BC3D8BB00B39688 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4167125D1BC3D8BB00B39688 /* main.m */; };
 		416712641BC3D8CF00B39688 /* libmullepbx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 416712321BC3D45500B39688 /* libmullepbx.a */; };
 		4167126C1BC3E6FD00B39688 /* NSString+KeyFromSetterSelector.m in Sources */ = {isa = PBXBuildFile; fileRef = 4121674F12D897FB00D49F14 /* NSString+KeyFromSetterSelector.m */; };
-		41795C101BCA80CC00CEB1CE /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 41795C0F1BCA80CC00CEB1CE /* README.md */; };
+		41B199F31E21118500193B09 /* PBXHeadersBuildPhase+Export.m in Sources */ = {isa = PBXBuildFile; fileRef = 41B199F21E21118500193B09 /* PBXHeadersBuildPhase+Export.m */; };
+		41B199FE1E21183500193B09 /* NSString+ExternalName.m in Sources */ = {isa = PBXBuildFile; fileRef = 41B199FD1E21183500193B09 /* NSString+ExternalName.m */; };
+		41B19A021E211B5F00193B09 /* PBXPathObject+HierarchyAndPaths.m in Sources */ = {isa = PBXBuildFile; fileRef = 41B19A011E211B5F00193B09 /* PBXPathObject+HierarchyAndPaths.m */; };
+		41B19A051E211B7C00193B09 /* NSArray+Path.m in Sources */ = {isa = PBXBuildFile; fileRef = 41B19A041E211B7C00193B09 /* NSArray+Path.m */; };
 		41D6EA0E1D61E22D00221D7A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41D6EA0D1D61E22D00221D7A /* Foundation.framework */; };
 		41F6FBAD1BC3FE8F000C60B2 /* MullePBXArchiver.h in Headers */ = {isa = PBXBuildFile; fileRef = 412167B312D89EF700D49F14 /* MullePBXArchiver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		41F6FBAE1BC3FE94000C60B2 /* MulleSortedKeyDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 4121697A12D8B42500D49F14 /* MulleSortedKeyDictionary.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -71,7 +74,7 @@
 		415CE1641487CAD300578330 /* PBXTarget+HierarchyAndPaths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXTarget+HierarchyAndPaths.h"; sourceTree = "<group>"; };
 		415CE1651487CAD300578330 /* PBXTarget+HierarchyAndPaths.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXTarget+HierarchyAndPaths.m"; sourceTree = "<group>"; };
 		416712321BC3D45500B39688 /* libmullepbx.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmullepbx.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		4167125B1BC3D8BB00B39688 /* mulle-xcode-settings */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mulle-xcode-settings"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4167125B1BC3D8BB00B39688 /* mulle-xcode-to-cmake */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mulle-xcode-to-cmake"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4167125D1BC3D8BB00B39688 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		41786C9812C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+DecodeWithObjectStorage.h"; sourceTree = "<group>"; };
 		41786C9912C7B2840010EB6D /* NSObject+DecodeWithObjectStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+DecodeWithObjectStorage.m"; sourceTree = "<group>"; };
@@ -84,6 +87,14 @@
 		41795C0F1BCA80CC00CEB1CE /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		418C5D6713AE2C9900E14843 /* PBXProject+VirtualProjectRoot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXProject+VirtualProjectRoot.h"; sourceTree = "<group>"; };
 		418C5D6813AE2CAF00E14843 /* PBXProject+VirtualProjectRoot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXProject+VirtualProjectRoot.m"; sourceTree = "<group>"; };
+		41B199F11E21118500193B09 /* PBXHeadersBuildPhase+Export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXHeadersBuildPhase+Export.h"; sourceTree = "<group>"; };
+		41B199F21E21118500193B09 /* PBXHeadersBuildPhase+Export.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXHeadersBuildPhase+Export.m"; sourceTree = "<group>"; };
+		41B199FC1E21183500193B09 /* NSString+ExternalName.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+ExternalName.h"; sourceTree = "<group>"; };
+		41B199FD1E21183500193B09 /* NSString+ExternalName.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+ExternalName.m"; sourceTree = "<group>"; };
+		41B19A001E211B5F00193B09 /* PBXPathObject+HierarchyAndPaths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXPathObject+HierarchyAndPaths.h"; sourceTree = "<group>"; };
+		41B19A011E211B5F00193B09 /* PBXPathObject+HierarchyAndPaths.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXPathObject+HierarchyAndPaths.m"; sourceTree = "<group>"; };
+		41B19A031E211B7C00193B09 /* NSArray+Path.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+Path.h"; sourceTree = "<group>"; };
+		41B19A041E211B7C00193B09 /* NSArray+Path.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+Path.m"; sourceTree = "<group>"; };
 		41D6EA0D1D61E22D00221D7A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		41F6FBB81BC4037D000C60B2 /* NSString+LeadingDotExpansion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+LeadingDotExpansion.h"; sourceTree = "<group>"; };
 		41F6FBB91BC4037D000C60B2 /* NSString+LeadingDotExpansion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+LeadingDotExpansion.m"; sourceTree = "<group>"; };
@@ -126,7 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				416712321BC3D45500B39688 /* libmullepbx.a */,
-				4167125B1BC3D8BB00B39688 /* mulle-xcode-settings */,
+				4167125B1BC3D8BB00B39688 /* mulle-xcode-to-cmake */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -192,6 +203,14 @@
 			isa = PBXGroup;
 			children = (
 				4167125D1BC3D8BB00B39688 /* main.m */,
+				41B199F11E21118500193B09 /* PBXHeadersBuildPhase+Export.h */,
+				41B199F21E21118500193B09 /* PBXHeadersBuildPhase+Export.m */,
+				41B19A001E211B5F00193B09 /* PBXPathObject+HierarchyAndPaths.h */,
+				41B19A011E211B5F00193B09 /* PBXPathObject+HierarchyAndPaths.m */,
+				41B19A031E211B7C00193B09 /* NSArray+Path.h */,
+				41B19A041E211B7C00193B09 /* NSArray+Path.m */,
+				41B199FC1E21183500193B09 /* NSString+ExternalName.h */,
+				41B199FD1E21183500193B09 /* NSString+ExternalName.m */,
 			);
 			name = "mulle-xcode-settings";
 			path = "src/mulle-xcode-settings";
@@ -246,9 +265,9 @@
 			productReference = 416712321BC3D45500B39688 /* libmullepbx.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		4167125A1BC3D8BB00B39688 /* mulle-xcode-settings */ = {
+		4167125A1BC3D8BB00B39688 /* mulle-xcode-to-cmake */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4167125F1BC3D8BB00B39688 /* Build configuration list for PBXNativeTarget "mulle-xcode-settings" */;
+			buildConfigurationList = 4167125F1BC3D8BB00B39688 /* Build configuration list for PBXNativeTarget "mulle-xcode-to-cmake" */;
 			buildPhases = (
 				416712571BC3D8BB00B39688 /* Sources */,
 				416712581BC3D8BB00B39688 /* Frameworks */,
@@ -259,9 +278,9 @@
 			dependencies = (
 				416712661BC3D8D900B39688 /* PBXTargetDependency */,
 			);
-			name = "mulle-xcode-settings";
+			name = "mulle-xcode-to-cmake";
 			productName = "mulle-xcode-settings";
-			productReference = 4167125B1BC3D8BB00B39688 /* mulle-xcode-settings */;
+			productReference = 4167125B1BC3D8BB00B39688 /* mulle-xcode-to-cmake */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -279,7 +298,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "mulle-xcode-settings" */;
+			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "mulle-xcode-to-cmake" */;
 			compatibilityVersion = "Xcode 2.4";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -299,7 +318,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				4167125A1BC3D8BB00B39688 /* mulle-xcode-settings */,
+				4167125A1BC3D8BB00B39688 /* mulle-xcode-to-cmake */,
 				416712311BC3D45500B39688 /* mullepbx */,
 			);
 		};
@@ -326,8 +345,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41795C101BCA80CC00CEB1CE /* README.md in Sources */,
+				41B19A051E211B7C00193B09 /* NSArray+Path.m in Sources */,
+				41B19A021E211B5F00193B09 /* PBXPathObject+HierarchyAndPaths.m in Sources */,
+				41B199FE1E21183500193B09 /* NSString+ExternalName.m in Sources */,
 				4167125E1BC3D8BB00B39688 /* main.m in Sources */,
+				41B199F31E21118500193B09 /* PBXHeadersBuildPhase+Export.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,10 +367,10 @@
 		1DEB927908733DD40010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 1.1.1;
+				CURRENT_PROJECT_VERSION = 0.0.0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
-				DYLIB_CURRENT_VERSION = 1.0.0;
+				DYLIB_CURRENT_VERSION = 0.0.0;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_CFLAGS = "-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"";
@@ -360,10 +382,10 @@
 		1DEB927A08733DD40010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 1.1.1;
+				CURRENT_PROJECT_VERSION = 0.0.0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
-				DYLIB_CURRENT_VERSION = 1.0.0;
+				DYLIB_CURRENT_VERSION = 0.0.0;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_CFLAGS = "-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"";
@@ -395,6 +417,7 @@
 					"-all_load",
 					"$(inherited)",
 				);
+				PRODUCT_NAME = "mulle-xcode-to-cmake";
 			};
 			name = Debug;
 		};
@@ -407,13 +430,14 @@
 					"-all_load",
 					"$(inherited)",
 				);
+				PRODUCT_NAME = "mulle-xcode-to-cmake";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "mulle-xcode-settings" */ = {
+		1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "mulle-xcode-to-cmake" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB927908733DD40010E9CD /* Debug */,
@@ -431,7 +455,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4167125F1BC3D8BB00B39688 /* Build configuration list for PBXNativeTarget "mulle-xcode-settings" */ = {
+		4167125F1BC3D8BB00B39688 /* Build configuration list for PBXNativeTarget "mulle-xcode-to-cmake" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				416712601BC3D8BB00B39688 /* Debug */,
