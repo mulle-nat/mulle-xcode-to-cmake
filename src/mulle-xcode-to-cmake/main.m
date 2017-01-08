@@ -1,21 +1,21 @@
 /*
  mulle-xcode-to-cmake
- 
+
  Created by Nat! on 7.1.17
  Copyright 2017 Mulle kybernetiK
- 
+
  This file is part of mulle-xcode-to-cmake
- 
+
  mulle-xcode-to-cmake is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  mulle-xcode-to-cmake is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with mulle-xcode-to-cmake.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -34,6 +34,7 @@ static BOOL   suppressBoilerplate;
 static BOOL   suppressProject;
 static BOOL   suppressFoundation;
 
+static NSString  *hackPrefix = @"";
 
 static NSMutableDictionary  *staticLibraries;
 static NSMutableDictionary  *sharedLibraries;
@@ -84,7 +85,7 @@ static void   usage()
            "Environment:\n"
            "\tVERBOSE     : dump some info to stderr\n"
          );
-   
+
    exit( 1);
 }
 
@@ -94,7 +95,7 @@ static void   usage()
 static NSString   *makeMacroName( NSString *s)
 {
    NSCharacterSet   *set;
-   
+
    set = [[NSCharacterSet alphanumericCharacterSet] invertedSet];
    s   = [[s componentsSeparatedByCharactersInSet:set] componentsJoinedByString:@"_"];
 
@@ -108,27 +109,20 @@ static PBXTarget   *find_target_by_name( PBXProject *root, NSString *name)
 {
    NSEnumerator   *rover;
    PBXTarget      *pbxtarget;
-   
+
    rover = [[root targets] objectEnumerator];
    while( pbxtarget = [rover nextObject])
       if( [[pbxtarget name] isEqualToString:name])
          break;
-   
+
    return( pbxtarget);
 }
 
 
-static void   list_target_names( PBXProject *root)
+static NSArray   *all_target_names( PBXProject *root)
 {
-   NSEnumerator   *rover;
-   PBXTarget      *pbxtarget;
-   
-   printf( "Targets:\n");
-   rover = [[root targets] objectEnumerator];
-   while( pbxtarget = [rover nextObject])
-      printf( "\t%s\n", [[pbxtarget name] UTF8String]);
+   return( [[root targets] valueForKey:@"name"]);
 }
-
 
 
 enum Command
@@ -141,11 +135,11 @@ enum Command
 static void  fail( NSString *format, ...)
 {
    va_list   args;
-   
+
    va_start( args, format);
    NSLogv( format, args);
    va_end( args);
-   
+
    exit( 1);
 }
 
@@ -161,12 +155,12 @@ static void   export_files( NSArray *files,
    PBXFileReference  *reference;
    NSString          *path;
    NSString          *dir;
-   
+
    if( cmd == Export)
    {
       printf( "\nset( %s\n", [name UTF8String]);
    }
-   
+
    rover = [files objectEnumerator];
    while( file = [rover nextObject])
    {
@@ -182,7 +176,7 @@ static void   export_files( NSArray *files,
                dir = @".";  // needed when subdir does include
             addHeaderDirectory( dir);
          }
-      printf( "%s\n", [path UTF8String]);
+      printf( "%s%s\n", [hackPrefix UTF8String], [path UTF8String]);
    }
 
    if( cmd == Export)
@@ -195,7 +189,7 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
                                    NSString *prefix)
 {
    NSString  *name;
-   
+
    name = @"PUBLIC_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
@@ -218,8 +212,21 @@ static void   export_sources_phase( PBXSourcesBuildPhase *pbxphase,
                                     NSString *prefix)
 {
    NSString  *name;
-   
+
    name = @"SOURCES";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   export_files( [pbxphase files], name, cmd, NO);
+}
+
+
+static void   export_resources_phase( PBXResourcesBuildPhase *pbxphase,
+                                      enum Command cmd,
+                                      NSString *prefix)
+{
+   NSString  *name;
+
+   name = @"RESOURCES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
    export_files( [pbxphase files], name, cmd, NO);
@@ -235,7 +242,7 @@ static void   collect_libraries( PBXFrameworksBuildPhase *pbxphase,
    PBXFileReference  *reference;
    NSString          *path;
    NSString          *libraryName;
-   
+
    rover = [[pbxphase files] objectEnumerator];
    while( file = [rover nextObject])
    {
@@ -244,9 +251,9 @@ static void   collect_libraries( PBXFrameworksBuildPhase *pbxphase,
       path      = [path stringByDeletingPathExtension];
       if( [path hasPrefix:@"lib"])
          path = [path substringFromIndex:3];
-      
+
       libraryName = makeMacroName( path);
-      
+
       if( [[[reference path] pathExtension] isEqualToString:@"a"])
       {
          if( isStatic)
@@ -267,25 +274,23 @@ static void   export_libraries( NSDictionary *libraries,
                                 BOOL isStatic)
 {
    NSEnumerator      *rover;
-   PBXBuildFile      *file;
-   PBXFileReference  *reference;
    NSString          *path;
    NSString          *name;
    NSString          *libraryName;
-   
+
    name = isStatic ? @"STATIC_DEPENDENCIES" : @"DEPENDENCIES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   
+
    printf( "\nset( %s\n", [name UTF8String]);
-   
+
    rover = [[[libraries allKeys] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
    {
       libraryName = [libraries objectForKey:path];
       printf( "${%s_LIBRARY}\n", [libraryName UTF8String]);
    }
-   
+
    printf( ")\n");
 }
 
@@ -296,11 +301,11 @@ static void   export_find_libraries( NSDictionary *libraries)
    NSEnumerator   *rover;
    NSString       *key;
    NSString       *library;
-   
+
    keys = [[libraries allKeys] sortedArrayUsingSelector:@selector( compare:)];
    if( [keys count])
       printf( "\n");
-   
+
    rover = [keys objectEnumerator];
    while( key = [rover nextObject])
    {
@@ -330,7 +335,7 @@ static void   export_phase( PBXBuildPhase *pbxphase,
 {
    if( verbose)
       fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxphase class]) UTF8String], [[pbxphase name] UTF8String]);
-   
+
    if( [pbxphase isKindOfClass:[PBXHeadersBuildPhase class]])
    {
       export_headers_phase( (PBXHeadersBuildPhase *) pbxphase, cmd, prefix);
@@ -340,6 +345,12 @@ static void   export_phase( PBXBuildPhase *pbxphase,
    if( [pbxphase isKindOfClass:[PBXSourcesBuildPhase class]])
    {
       export_sources_phase( (PBXSourcesBuildPhase *) pbxphase, cmd, prefix);
+      return;
+   }
+
+   if( [pbxphase isKindOfClass:[PBXResourcesBuildPhase class]])
+   {
+      export_resources_phase( (PBXResourcesBuildPhase *) pbxphase, cmd, prefix);
       return;
    }
 
@@ -355,13 +366,13 @@ static void   add_foundation_if_needed( PBXTarget *pbxtarget)
 {
    BOOL       addFoundation;
    NSString   *type;
-   
+
    type = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
-   
+
    addFoundation = suppressFoundation ? NO : YES;
    if( [type hasPrefix:@"library"])
       addFoundation = NO;
-   
+
    if( addFoundation)
       addSharedLibrariesToFind( @"Foundation", @"FOUNDATION");
 }
@@ -369,43 +380,43 @@ static void   add_foundation_if_needed( PBXTarget *pbxtarget)
 
 static void   file_exporter( PBXTarget *pbxtarget,
                              enum Command cmd,
-                             BOOL all)
+                             BOOL multipleTargets)
 {
    PBXBuildPhase   *phase;
    NSEnumerator    *rover;
 
    if( verbose)
       fprintf( stderr, "target: %s\n", [[pbxtarget name] UTF8String]);
-   
+
    if( cmd == List)
    {
       printf( "%s\n", [[pbxtarget name] UTF8String]);
       return;
    }
-   
+
    add_foundation_if_needed( pbxtarget);
-   
+
    rover = [[pbxtarget buildPhases] objectEnumerator];
    while( phase = [rover nextObject])
    {
-      export_phase( phase, cmd, all ? makeMacroName( [pbxtarget name]) : nil);
+      export_phase( phase, cmd, multipleTargets ? makeMacroName( [pbxtarget name]) : nil);
    }
 }
 
 
 static void   export_dependency( PBXTargetDependency *pbxdependency,
                                  enum Command cmd,
-                                 PBXTarget *pbxtarget)
+                                 PBXTarget *pbxtarget,
+                                 NSArray *targets)
 {
-   NSString  *dependencyCMakeName;
    PBXTarget *dsttarget;
-   
+
    if( verbose)
       fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxdependency class]) UTF8String], [[pbxdependency name] UTF8String]);
-   
+
    if( cmd != Export)
       return;
-   
+
    dsttarget = [pbxdependency target];
    if( ! dsttarget)
    {
@@ -414,7 +425,13 @@ static void   export_dependency( PBXTargetDependency *pbxdependency,
       return;
    }
    
-   printf( "\nadd_dependencies( %s %s);\n",
+   if( ! [targets containsObject:dsttarget])
+   {
+      fprintf( stderr, "mulle-xcode-to-cmake: can not export dependency to target %s as it is not exported\n", [[dsttarget name] UTF8String]);
+      return;
+   }
+   
+   printf( "\nadd_dependencies( %s %s)\n",
           [[pbxtarget name] UTF8String],
           [[dsttarget name] UTF8String]);
 }
@@ -427,78 +444,35 @@ static void   print_prefixed_variable_expansion( NSString *name, NSString *prefi
    printf( "${%s}\n", [name UTF8String]);
 }
 
-
-static void   target_exporter( PBXTarget *pbxtarget,
-                               enum Command cmd,
-                               BOOL all)
+static void   export_target_include_directories( char *s_target_name)
 {
-   PBXTargetDependency   *dependency;
-   NSEnumerator          *rover;
-   NSString              *name;
-   NSString              *staticName;
-   NSString              *type;
-   NSString              *path;
-   NSString              *macroName;
-   char                  *format;
+   NSEnumerator   *rover;
+   NSString       *path;
    
-   if( verbose)
-      fprintf( stderr, "target: %s\n", [[pbxtarget name] UTF8String]);
-   
-   macroName = makeMacroName( [pbxtarget name]);
-   type      = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
-   
-
-   if( [type isEqualToString:@"library.static"])
-   {
-      printf( "\n"
-              "add_library( %s STATIC\n", [[pbxtarget name] UTF8String]);
-   }
-   else
-      if( [type hasPrefix:@"library"])
-      {
-         printf( "\n"
-                 "add_library( %s SHARED\n", [[pbxtarget name] UTF8String]);
-      }
-      else
-         if( [type hasPrefix:@"framework"])
-         {
-            printf( "\n"
-                   "add_library( %s SHARED\n", [[pbxtarget name] UTF8String]);
-         }
-         else
-         {
-            printf( "\n"
-                   "add_executable( %s\n", [[pbxtarget name] UTF8String]);
-         }
-   
-   print_prefixed_variable_expansion( @"SOURCES", macroName, all);
-   print_prefixed_variable_expansion( @"PUBLIC_HEADERS", macroName, all);
-   print_prefixed_variable_expansion( @"PROJECT_HEADERS", macroName, all);
-   print_prefixed_variable_expansion( @"PRIVATE_HEADERS", macroName, all);
-   
-   printf( ")\n");
-
    printf( "\n"
 "target_include_directories( %s\n"
 "   PUBLIC\n",
-      [[pbxtarget name] UTF8String]);
+      s_target_name);
 
    rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
-      printf( "      %s\n", [path UTF8String]);
+      printf( "      %s%s\n", [hackPrefix UTF8String], [path UTF8String]);
    printf( ")\n");
+}
 
-  
-   rover = [[pbxtarget dependencies] objectEnumerator];
-   while( dependency = [rover nextObject])
-      export_dependency( dependency, cmd, pbxtarget);
+
+static void   export_target_link_libraries( char *s_target_name, NSString *macroName, BOOL multipleTargets)
+{
+   NSString   *staticName;
+   NSString   *name;
+   char       *format;
    
    staticName = @"STATIC_DEPENDENCIES";
-   if( all)
+   if( multipleTargets)
       staticName = [NSString stringWithFormat:@"%@_%@", macroName, staticName];
 
    name = @"DEPENDENCIES";
-   if( all)
+   if( multipleTargets)
       name = [NSString stringWithFormat:@"%@_%@", macroName, name];
 
    if( ! suppressBoilerplate)
@@ -515,26 +489,85 @@ static void   target_exporter( PBXTarget *pbxtarget,
 ")\n";
 
    printf( format,
-         [[pbxtarget name] UTF8String],
+         s_target_name,
          [staticName UTF8String],
          [name UTF8String]);
+}
+
+
+static void   target_exporter( PBXTarget *pbxtarget,
+                               enum Command cmd,
+                               NSArray *targets)
+{
+   PBXTargetDependency   *dependency;
+   NSEnumerator          *rover;
+   NSString              *headersName;
+   NSString              *resourcesName;
+   NSString              *type;
+   NSString              *macroName;
+   char                  *s_target_name;
+   BOOL                  multipleTargets;
    
-   name = @"PUBLIC_HEADERS";
-   if( all)
-      name = [NSString stringWithFormat:@"%@_%@", macroName, name];
+   multipleTargets = [targets count] >= 2;
    
+   s_target_name = [[pbxtarget name] UTF8String];
+   if( verbose)
+      fprintf( stderr, "target: %s\n", s_target_name);
+
+   macroName = makeMacroName( [pbxtarget name]);
+   type      = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
+
+
+   if( [type isEqualToString:@"library.static"])
+   {
+      printf( "\n"
+              "add_library( %s STATIC\n", s_target_name);
+   }
+   else
+      if( [type hasPrefix:@"library"])
+      {
+         printf( "\n"
+                 "add_library( %s SHARED\n", s_target_name);
+      }
+      else
+         if( [type hasPrefix:@"framework"])
+         {
+            printf( "\n"
+                   "add_library( %s SHARED\n", s_target_name);
+         }
+         else
+         {
+            printf( "\n"
+                   "add_executable( %s\n", s_target_name);
+         }
+
+   print_prefixed_variable_expansion( @"SOURCES", macroName, multipleTargets);
+   print_prefixed_variable_expansion( @"PUBLIC_HEADERS", macroName, multipleTargets);
+   print_prefixed_variable_expansion( @"PROJECT_HEADERS", macroName, multipleTargets);
+   print_prefixed_variable_expansion( @"PRIVATE_HEADERS", macroName, multipleTargets);
+
+   printf( ")\n");
+
+   export_target_include_directories( s_target_name);
+   
+   rover = [[pbxtarget dependencies] objectEnumerator];
+   while( dependency = [rover nextObject])
+      export_dependency( dependency, cmd, pbxtarget, targets);
+
+   export_target_link_libraries( s_target_name, macroName, multipleTargets);
+
+   headersName = @"PUBLIC_HEADERS";
+   if( multipleTargets)
+      headersName = [NSString stringWithFormat:@"%@_%@", macroName, headersName];
+
+   resourcesName = @"RESOURCES";
+   if( multipleTargets)
+      resourcesName = [NSString stringWithFormat:@"%@_%@", macroName, resourcesName];
+
    if( [type hasPrefix:@"framework"])
    {
       printf( "\n"
-"if (APPLE)\n");
-
-      if( ! suppressBoilerplate)
-         printf(
-"   set(BEGIN_ALL_LOAD \"-all_load\")\n"
-"   set(END_ALL_LOAD)\n"
-"\n");
-
-         printf(
+"if (APPLE)\n"
 "   set_target_properties( %s PROPERTIES\n"
 "FRAMEWORK TRUE\n"
 "FRAMEWORK_VERSION A\n"
@@ -542,14 +575,16 @@ static void   target_exporter( PBXTarget *pbxtarget,
 "# VERSION \"0.0.0\"\n"
 "# SOVERSION  \"0.0.0\"\n"
 "PUBLIC_HEADER \"${%s}\"\n"
+"RESOURCE \"${%s}\"\n"
 ")\n"
 "\n"
 "   install( TARGETS %s DESTINATION \"Frameworks\")\n"
 "endif()\n",
-         [[pbxtarget name] UTF8String],
-         [[pbxtarget name] UTF8String],
-         [name UTF8String],
-         [[pbxtarget name] UTF8String]);
+         s_target_name,
+         s_target_name,
+         [headersName UTF8String],
+         [resourcesName UTF8String],
+         s_target_name);
    }
    else
       if( [type hasPrefix:@"library"])
@@ -557,9 +592,9 @@ static void   target_exporter( PBXTarget *pbxtarget,
          printf( "\n"
 "install( TARGETS %s DESTINATION \"lib\")\n"
 "install( FILES ${%s} DESTINATION \"include/%s\")\n",
-         [[pbxtarget name] UTF8String],
-         [name UTF8String],
-         [[pbxtarget name] UTF8String]);
+         s_target_name,
+         [headersName UTF8String],
+         s_target_name);
       }
 }
 
@@ -567,19 +602,34 @@ static void   target_exporter( PBXTarget *pbxtarget,
 
 static void   exporter( PBXProject *root,
                         enum Command cmd,
-                        NSString *target,
+                        NSArray  *targetNames,
                         NSString *file)
 {
-   PBXTarget                        *pbxtarget;
-   PBXObjectWithConfigurationList   *obj;
-   NSEnumerator                     *rover;
-
+   PBXTarget       *pbxtarget;
+   NSEnumerator    *rover;
+   BOOL            multipleTargets;
+   NSString        *name;
+   NSMutableArray  *targets;
+   NSMutableArray  *others;
+   
+   targets = [NSMutableArray array];
+   rover = [targetNames objectEnumerator];
+   while( name = [rover nextObject])
+   {
+      pbxtarget = find_target_by_name( root, name);
+      if( ! pbxtarget)
+         fail( @"target \"%@\" not found", name);
+      [targets addObject:pbxtarget];
+   }
+   
+   multipleTargets = [targets count] > 1;
+   
    if( cmd == Export)
    {
       if( ! suppressProject)
       {
-         printf( "project( %s)\n", target
-            ? [target UTF8String]
+         printf( "project( %s)\n", targets && ! multipleTargets
+            ? [[targetNames lastObject] UTF8String] // tiny bug
             : [[[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension] UTF8String]);
          //
          // cross platform wise 3.4 gave me the least trouble
@@ -617,7 +667,7 @@ static void   exporter( PBXProject *root,
 "endif()\n"
 "\n");
       }
-      
+
       if( ! suppressBoilerplate)
       {
          printf( "\n"
@@ -630,7 +680,7 @@ static void   exporter( PBXProject *root,
 "   # if( NOT CMAKE_OSX_SYSROOT)\n"
 "   #    set( CMAKE_OSX_SYSROOT \"/\" CACHE STRING \"SDK for OSX\" FORCE)   # means current OS X\n"
 "   # endif()\n"
-"   # \n"
+"   #\n"
 "   # # baseline set to 10.6 for rpath\n"
 "   # if( NOT CMAKE_OSX_DEPLOYMENT_TARGET)\n"
 "   #   set(CMAKE_OSX_DEPLOYMENT_TARGET \"10.6\" CACHE STRING \"Deployment target for OSX\" FORCE)\n"
@@ -654,55 +704,37 @@ static void   exporter( PBXProject *root,
       }
    }
 
-   if( target)
+   rover = [targets objectEnumerator];
+   while( pbxtarget = [rover nextObject])
    {
-      pbxtarget = find_target_by_name( root, target);
-      if( ! pbxtarget)
-         fail( @"target \"%@\" not found", target);
-      file_exporter( pbxtarget, cmd, NO);
-   }
-   else
-   {
-      rover = [[root targets] objectEnumerator];
-      while( pbxtarget = [rover nextObject])
+      if( cmd == Export)
       {
-         if( cmd == Export)
-         {
-            printf( "\n"
-                   "##\n"
-                   "## %s Files\n"
-                   "##\n", [[pbxtarget name] UTF8String]);
-         }
-         file_exporter( pbxtarget, cmd, YES);
+         printf( "\n"
+                "##\n"
+                "## %s Files\n"
+                "##\n", [[pbxtarget name] UTF8String]);
       }
+      file_exporter( pbxtarget, cmd, multipleTargets);
    }
-   
+
    // ugliness ensues...
-   
+
    if( cmd == List)
       return;
 
-   if( target)
+   others = nil;
+   rover = [targets objectEnumerator];
+   while( pbxtarget = [rover nextObject])
    {
-      pbxtarget = find_target_by_name( root, target);
-      if( ! pbxtarget)
-         fail( @"target \"%@\" not found", target);
-      target_exporter( pbxtarget, cmd, NO);
-   }
-   else
-   {
-      rover = [[root targets] objectEnumerator];
-      while( pbxtarget = [rover nextObject])
+      if( cmd == Export && multipleTargets)
       {
-         if( cmd == Export)
-         {
-            printf( "\n"
-                   "##\n"
-                   "## %s\n"
-                   "##\n", [[pbxtarget name] UTF8String]);
-         }
-         target_exporter( pbxtarget, cmd, YES);
+         printf( "\n"
+                "##\n"
+                "## %s\n"
+                "##\n", [[pbxtarget name] UTF8String]);
       }
+      
+      target_exporter( pbxtarget, cmd, targets);
    }
 }
 
@@ -712,7 +744,7 @@ static NSString  *backupPathForPath( NSString *file)
    NSString  *ext;
    NSString  *dir;
    NSString  *name;
-   
+
    dir  = [file stringByDeletingLastPathComponent];
    name = [file lastPathComponent];
    ext  = [name pathExtension];
@@ -729,10 +761,10 @@ static void   writeStringToPath( NSString *s, NSString *file)
    NSString        *backupFile;
    NSFileManager   *manager;
    NSError         *error;
-   
+
    backupFile = backupPathForPath( file);
    manager    = [NSFileManager defaultManager];
-   
+
    [manager removeItemAtPath:backupFile
                        error:&error];
    if( ! [manager moveItemAtPath:file
@@ -751,27 +783,22 @@ static void   writeStringToPath( NSString *s, NSString *file)
 static int   _main( int argc, const char * argv[])
 {
    NSArray         *arguments;
-   NSDictionary    *plist;
-   NSString        *backupFile;
    NSString        *configuration;
    NSString        *file;
-   NSString        *key;
-   NSString        *old;
    NSString        *s;
    NSString        *target;
-   NSString        *value;
    id              root;
    unsigned int    i, n;
-   BOOL            allTargets;
+   NSMutableArray  *targetNames;
    
    configuration = nil;
    target        = nil;
-   allTargets    = NO;
    verbose       = getenv( "VERBOSE") ? YES : NO;
+   targetNames       = nil;
    
    arguments = [[NSProcessInfo processInfo] arguments];
    n         = [arguments count];
-   
+
    if( [arguments containsObject:@"-v"] || [arguments containsObject:@"--version"] || [arguments containsObject:@"-version"])
    {
       fprintf( stderr, "v%s\n", CURRENT_PROJECT_VERSION);
@@ -780,22 +807,21 @@ static int   _main( int argc, const char * argv[])
 
    if( [arguments containsObject:@"-h"] || [arguments containsObject:@"--help"] || [arguments containsObject:@"-help"])
       usage();
-   
+
    file = [arguments lastObject];
    if( ! --n)
       usage();
-   
+
    if( [[file pathExtension] isEqualToString:@"xcodeproj"])
       file = [file stringByAppendingPathComponent:@"project.pbxproj"];
-   
+
    root = [MullePBXUnarchiver unarchiveObjectWithFile:&file];
    if( ! root)
       fail( @"File %@ is not a PBX (Xcode) file", file);
-   
+
    for( i = 1; i < n; i++)
    {
       s = [arguments objectAtIndex:i];
-      
 
       if( [s isEqualToString:@"-b"] ||
           [s isEqualToString:@"--no-boilerplate"])
@@ -818,34 +844,49 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
+      if( [s isEqualToString:@"--hack-paths"])
+      {
+         if( ++i >= n)
+            usage();
+
+         hackPrefix = [arguments objectAtIndex:i];
+         continue;
+      }
+
       if( [s isEqualToString:@"-t"] ||
           [s isEqualToString:@"-target"] ||
           [s isEqualToString:@"--target"])
       {
          if( ++i >= n)
             usage();
-         
+
          target = [arguments objectAtIndex:i];
+         if( ! targetNames)
+            targetNames = [NSMutableArray array];
+         [targetNames addObject:target];
          continue;
       }
-      
+
       // commands
+      if( ! targetNames)
+         targetNames = all_target_names( root);
+      
       if( [s isEqualToString:@"export"])
       {
-         exporter( root, Export, target, file);
-         continue;
+         exporter( root, Export, targetNames, file);
+         break;
       }
 
       if( [s isEqualToString:@"list"])
       {
-         exporter( root, List, target, file);
-         continue;
+         exporter( root, List, targetNames, file);
+         break;
       }
-      
+
       NSLog( @"unknown command %@", s);
       usage();
    }
-   
+
    return( 0);
 }
 
@@ -854,7 +895,7 @@ int   main( int argc, const char * argv[])
 {
    NSAutoreleasePool   *pool;
    int                 rval;
-   
+
    pool = [NSAutoreleasePool new];
    rval = _main( argc, argv);
    [pool release];

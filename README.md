@@ -4,6 +4,7 @@ A little tool to convert [Xcode](https://developer.apple.com/xcode/) projects to
 
 You can specify the target to export. If you don't specify a target,  all targets are exported. 
 It doesn't do a perfect job, but it's better than doing it all by hand.
+It can convert library, framework and tool targets. 
 
 
 Fork      |  Build Status | Master Version
@@ -118,6 +119,12 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 
 ### Releasenotes
+
+# 0.2.0
+
+* output resources too
+* allow to specify multiple targets
+* fix more bugs
 
 # 0.1.0
 

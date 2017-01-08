@@ -90,14 +90,12 @@
 - (NSString *) absoluteSourceTreeFileSystemPath
 {
    NSString   *tree;
-   PBXGroup   *rootGroup;
    PBXGroup   *parentGroup;
    
    tree = [self sourceTree];
    if( [tree isEqualToString:@"<absolute>"])
       return( @"/");
       
-   rootGroup = [[self project] rootGroup];
    if( [tree isEqualToString:@"<group>"])
    {
       parentGroup = [self parentGroup];

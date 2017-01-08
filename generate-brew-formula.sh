@@ -1,9 +1,9 @@
-#! /bin/sh
+#! /bin/sh -x
 #
 # Generate a formula formulle-xcode-settings stand alone
 #
-PROJECT=MulleXcodeSettings
-TARGET=mulle-xcode-settings
+PROJECT=MulleXcodeToCmake
+TARGET=mulle-xcode-to-cmake
 HOMEPAGE="http://www.mulle-kybernetik.com/software/git/${TARGET}"
 DESC="Convert Xcode projects to cmake CMakeLists.txt "
 AGVTAG="`agvtool what-version -terse 2> /dev/null`"
@@ -32,10 +32,11 @@ check_for_git_tag()
 
 check_for_pristine_git_repo()
 {
-      local files
+   local files
+
    # allow project.pbxproj to be dirty.. because it's just too painful
    # otherwise
-   files=`expr $(git status --porcelain 2>/dev/null| egrep "^(M| M|\?)" | egrep -v '.xcodeproj/project.pbxproj' | wc -l)`
+   files=`expr $(git status --porcelain 2>/dev/null| egrep "^(M| M|\?)" | egrep -v 'generate-brew-formula.sh|.xcodeproj/project.pbxproj' | wc -l)`
 
    [ $files -eq 0 ] || fail "GIT repository not in pristine state"
 }

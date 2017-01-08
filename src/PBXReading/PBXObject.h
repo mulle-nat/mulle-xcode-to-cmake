@@ -191,11 +191,6 @@
 @end
 
 
-@interface PBXTargetDependency : PBXObject
-
-@end
-
-
 @interface PBXTarget : PBXObjectWithConfigurationList
 
 // all made with "forwarding"
@@ -207,6 +202,11 @@
 - (id) productReference;
 - (id) productType;
 
+@end
+
+
+@interface PBXTargetDependency : PBXObject
+- (PBXTarget *) target;
 @end
 
 
