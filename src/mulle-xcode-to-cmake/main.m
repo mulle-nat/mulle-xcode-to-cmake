@@ -789,12 +789,12 @@ static int   _main( int argc, const char * argv[])
    NSString        *target;
    id              root;
    unsigned int    i, n;
-   NSMutableArray  *targetNames;
+   id              targetNames;
    
    configuration = nil;
    target        = nil;
    verbose       = getenv( "VERBOSE") ? YES : NO;
-   targetNames       = nil;
+   targetNames   = nil;
    
    arguments = [[NSProcessInfo processInfo] arguments];
    n         = [arguments count];
