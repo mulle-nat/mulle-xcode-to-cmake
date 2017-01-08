@@ -376,7 +376,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_CFLAGS = (
-					"-DCURRENT_PROJECT_VERSION=\"\\\"${CURRENT_PROJECT_VERSION}\\\"\"",
+					"-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"",
 					"-Wno-objc-method-access",
 					"-Wno-incomplete-implementation",
 				);
@@ -397,7 +397,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_CFLAGS = (
-					"-DCURRENT_PROJECT_VERSION=\"\\\"${CURRENT_PROJECT_VERSION}\\\"\"",
+					"-DCURRENT_PROJECT_VERSION=\\\"${CURRENT_PROJECT_VERSION}\\\"",
 					"-Wno-objc-method-access",
 					"-Wno-incomplete-implementation",
 				);

@@ -33,6 +33,7 @@ static BOOL   verbose;
 static BOOL   suppressBoilerplate;
 static BOOL   suppressProject;
 static BOOL   suppressFoundation;
+static BOOL   suppressUIKit = YES;
 
 static NSString  *hackPrefix = @"";
 
@@ -40,6 +41,40 @@ static NSMutableDictionary  *staticLibraries;
 static NSMutableDictionary  *sharedLibraries;
 static NSMutableSet         *headerDirectories;
 
+
+static char   head_MacOSXBundleInfo[] =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+"<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+"<plist version=\"1.0\">\n"
+"<dict>\n"
+"   <key>CFBundleDevelopmentRegion</key>\n"
+"   <string>English</string>\n"
+"   <key>CFBundleExecutable</key>\n"
+"   <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>\n"
+"   <key>CFBundleGetInfoString</key>\n"
+"   <string>${MACOSX_BUNDLE_INFO_STRING}</string>\n"
+"   <key>CFBundleIconFile</key>\n"
+"   <string>${MACOSX_BUNDLE_ICON_FILE}</string>\n"
+"   <key>CFBundleIdentifier</key>\n"
+"   <string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>\n"
+"   <key>CFBundleInfoDictionaryVersion</key>\n"
+"   <string>6.0</string>\n"
+"   <key>CFBundleLongVersionString</key>\n"
+"   <string>${MACOSX_BUNDLE_LONG_VERSION_STRING}</string>\n"
+"   <key>CFBundleName</key>\n"
+"   <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>\n"
+"   <key>CFBundleShortVersionString</key>\n"
+"   <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>\n"
+"   <key>CFBundleSignature</key>\n"
+"   <string>????</string>\n"
+"   <key>CFBundleVersion</key>\n"
+"   <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>\n"
+"   <key>NSHumanReadableCopyright</key>\n"
+"   <string>${MACOSX_BUNDLE_COPYRIGHT}</string>\n";
+
+static char   tail_MacOSXBundleInfo[] =
+"</dict>\n"
+"</plist>\n";
 
 static void   addSharedLibrariesToFind( NSString *name, NSString *library)
 {
@@ -73,10 +108,11 @@ static void   usage()
            "\n"
            "Options:\n"
            ""
-           "\t-t <target> : target to export\n"
            "\t-b          : suppress boilerplate definitions\n"
-           "\t-p          : suppress project\n"
            "\t-f          : suppress Foundation (implicitly added)\n"
+           "\t-p          : suppress project\n"
+           "\t-t <target> : target to export\n"
+           "\t-u          : addd UIKIt\n"
            "\n"
            "Commands:\n"
            "\texport      : export CMakeLists.txt to stdout\n"
@@ -104,6 +140,22 @@ static NSString   *makeMacroName( NSString *s)
                                       useAllCaps:YES];
    return( [s uppercaseString]);
 }
+
+
+static NSString   *quotedPathIfNeeded( NSString *s)
+{
+   NSCharacterSet   *set;
+   
+   if( hackPrefix)
+      s = [hackPrefix stringByAppendingString:s];
+   
+   set = [NSCharacterSet whitespaceCharacterSet];
+   if( [s rangeOfCharacterFromSet:set].length == 0)
+      return( s);
+   return( [NSString stringWithFormat:@"\"%@\"", s]);
+}
+
+
 
 static PBXTarget   *find_target_by_name( PBXProject *root, NSString *name)
 {
@@ -176,7 +228,7 @@ static void   export_files( NSArray *files,
                dir = @".";  // needed when subdir does include
             addHeaderDirectory( dir);
          }
-      printf( "%s%s\n", [hackPrefix UTF8String], [path UTF8String]);
+      printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
    }
 
    if( cmd == Export)
@@ -362,19 +414,28 @@ static void   export_phase( PBXBuildPhase *pbxphase,
 }
 
 
-static void   add_foundation_if_needed( PBXTarget *pbxtarget)
+static void   add_implicit_frameworks_if_needed( PBXTarget *pbxtarget)
 {
    BOOL       addFoundation;
+   BOOL       addUIKit;
    NSString   *type;
 
    type = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
 
    addFoundation = suppressFoundation ? NO : YES;
+   addUIKit      = suppressUIKit ? NO : YES;
+
    if( [type hasPrefix:@"library"])
+   {
       addFoundation = NO;
+      addUIKit = NO;
+   }
 
    if( addFoundation)
       addSharedLibrariesToFind( @"Foundation", @"FOUNDATION");
+
+   if( addUIKit)
+      addSharedLibrariesToFind( @"UIKit", @"UI_KIT");
 }
 
 
@@ -394,7 +455,7 @@ static void   file_exporter( PBXTarget *pbxtarget,
       return;
    }
 
-   add_foundation_if_needed( pbxtarget);
+   add_implicit_frameworks_if_needed( pbxtarget);
 
    rover = [[pbxtarget buildPhases] objectEnumerator];
    while( phase = [rover nextObject])
@@ -424,13 +485,13 @@ static void   export_dependency( PBXTargetDependency *pbxdependency,
          fprintf( stderr, "mulle-xcode-to-cmake: can not deal with %s using it's name\n", [[pbxdependency debugDescription] UTF8String]);
       return;
    }
-   
+
    if( ! [targets containsObject:dsttarget])
    {
       fprintf( stderr, "mulle-xcode-to-cmake: can not export dependency to target %s as it is not exported\n", [[dsttarget name] UTF8String]);
       return;
    }
-   
+
    printf( "\nadd_dependencies( %s %s)\n",
           [[pbxtarget name] UTF8String],
           [[dsttarget name] UTF8String]);
@@ -448,7 +509,7 @@ static void   export_target_include_directories( char *s_target_name)
 {
    NSEnumerator   *rover;
    NSString       *path;
-   
+
    printf( "\n"
 "target_include_directories( %s\n"
 "   PUBLIC\n",
@@ -456,7 +517,7 @@ static void   export_target_include_directories( char *s_target_name)
 
    rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
-      printf( "      %s%s\n", [hackPrefix UTF8String], [path UTF8String]);
+      printf( "      %s\n", [quotedPathIfNeeded( path) UTF8String]);
    printf( ")\n");
 }
 
@@ -466,7 +527,7 @@ static void   export_target_link_libraries( char *s_target_name, NSString *macro
    NSString   *staticName;
    NSString   *name;
    char       *format;
-   
+
    staticName = @"STATIC_DEPENDENCIES";
    if( multipleTargets)
       staticName = [NSString stringWithFormat:@"%@_%@", macroName, staticName];
@@ -495,6 +556,44 @@ static void   export_target_link_libraries( char *s_target_name, NSString *macro
 }
 
 
+enum TargetType
+{
+   StaticLibrary,
+   SharedLibrary,
+   Bundle,
+   Framework,
+   Tool,
+   Application,
+   Unknown
+};
+
+
+static enum TargetType   get_target_type( PBXTarget *pbxtarget)
+{
+   NSString   *fullType;
+   NSString   *type;
+
+   fullType = [pbxtarget productType];
+   type     = [[fullType componentsSeparatedByString:@".product-type."] lastObject];
+
+   if( [type isEqualToString:@"library.static"])
+      return( StaticLibrary);
+   if( [type hasPrefix:@"library"])
+      return( SharedLibrary);
+   if( [type hasPrefix:@"framework"])
+      return( Framework);
+   if( [type hasPrefix:@"bundle"])
+      return( Bundle);
+   if( [type hasPrefix:@"tool"])
+      return( Tool);
+   if( [type hasPrefix:@"application"])
+      return( Application);
+
+   fprintf( stderr, "mulle-xcode-to-cmake:unknown target type %s, assuming it's a kind of application\n", [fullType UTF8String]);
+   return( Unknown);
+}
+
+
 static void   target_exporter( PBXTarget *pbxtarget,
                                enum Command cmd,
                                NSArray *targets)
@@ -503,43 +602,37 @@ static void   target_exporter( PBXTarget *pbxtarget,
    NSEnumerator          *rover;
    NSString              *headersName;
    NSString              *resourcesName;
-   NSString              *type;
    NSString              *macroName;
    char                  *s_target_name;
    BOOL                  multipleTargets;
-   
+   enum TargetType       targetType;
+
    multipleTargets = [targets count] >= 2;
-   
+
    s_target_name = [[pbxtarget name] UTF8String];
    if( verbose)
       fprintf( stderr, "target: %s\n", s_target_name);
 
-   macroName = makeMacroName( [pbxtarget name]);
-   type      = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
+   macroName   = makeMacroName( [pbxtarget name]);
+   targetType = get_target_type( pbxtarget);
 
-
-   if( [type isEqualToString:@"library.static"])
+   switch( targetType)
    {
+   case StaticLibrary :
       printf( "\n"
               "add_library( %s STATIC\n", s_target_name);
+      break;
+
+   case SharedLibrary :
+   case Framework     :
+      printf( "\n"
+              "add_library( %s SHARED\n", s_target_name);
+      break;
+
+   default     :
+      printf( "\n"
+              "add_executable( %s MACOSX_BUNDLE\n", s_target_name);
    }
-   else
-      if( [type hasPrefix:@"library"])
-      {
-         printf( "\n"
-                 "add_library( %s SHARED\n", s_target_name);
-      }
-      else
-         if( [type hasPrefix:@"framework"])
-         {
-            printf( "\n"
-                   "add_library( %s SHARED\n", s_target_name);
-         }
-         else
-         {
-            printf( "\n"
-                   "add_executable( %s\n", s_target_name);
-         }
 
    print_prefixed_variable_expansion( @"SOURCES", macroName, multipleTargets);
    print_prefixed_variable_expansion( @"PUBLIC_HEADERS", macroName, multipleTargets);
@@ -549,7 +642,7 @@ static void   target_exporter( PBXTarget *pbxtarget,
    printf( ")\n");
 
    export_target_include_directories( s_target_name);
-   
+
    rover = [[pbxtarget dependencies] objectEnumerator];
    while( dependency = [rover nextObject])
       export_dependency( dependency, cmd, pbxtarget, targets);
@@ -564,8 +657,29 @@ static void   target_exporter( PBXTarget *pbxtarget,
    if( multipleTargets)
       resourcesName = [NSString stringWithFormat:@"%@_%@", macroName, resourcesName];
 
-   if( [type hasPrefix:@"framework"])
+   switch( targetType)
    {
+   case StaticLibrary :
+   case SharedLibrary :
+   case Framework :
+   case Tool :
+      break;
+
+   default     :
+      printf( "\n"
+              "set_source_files_properties(\n"
+"${%s}\n"
+"   PROPERTIES\n"
+"      MACOSX_PACKAGE_LOCATION\n"
+"      Resources\n"
+")\n",
+         [resourcesName UTF8String]);
+   }
+
+
+   switch( targetType)
+   {
+   case Framework :
       printf( "\n"
 "if (APPLE)\n"
 "   set_target_properties( %s PROPERTIES\n"
@@ -585,17 +699,55 @@ static void   target_exporter( PBXTarget *pbxtarget,
          [headersName UTF8String],
          [resourcesName UTF8String],
          s_target_name);
-   }
-   else
-      if( [type hasPrefix:@"library"])
-      {
-         printf( "\n"
+      break;
+
+   case Application   :
+   case Bundle        :
+   case Unknown       :
+      printf( "\n"
+"if (APPLE)\n"
+"   set_target_properties( %s PROPERTIES\n"
+"MACOSX_BUNDLE_INFO_PLIST \"${CMAKE_CURRENT_SOURCE_DIR}/%s-Info.plist.in\"\n"
+")\n"
+"endif()\n",
+         s_target_name,
+         s_target_name);
+
+      fprintf( stderr, "You can use this text as %s-Info.plist.in contents:\n"
+"cat <<EOF > %s-Info.plist.in\n"
+"%s", s_target_name,
+      s_target_name,
+      head_MacOSXBundleInfo);
+
+      fprintf( stderr,
+"   <key>CFBundlePackageType</key>\n"
+"   <string>%s</string>\n", targetType == Bundle ? "BNDL" : "APPL");
+
+
+      if( targetType == Application)
+         fprintf( stderr,
+"   <key>NSPrincipalClass</key>\n"
+"   <string>NSApplication</string>\n"
+"   <key>NSMainNibFile</key>\n"
+"   <string>MainMenu</string>\n");
+
+      fprintf( stderr, "%s"
+"EOF\n",
+         tail_MacOSXBundleInfo);
+
+      break;
+
+   case SharedLibrary :
+   case StaticLibrary :
+      printf( "\n"
 "install( TARGETS %s DESTINATION \"lib\")\n"
 "install( FILES ${%s} DESTINATION \"include/%s\")\n",
          s_target_name,
          [headersName UTF8String],
          s_target_name);
-      }
+   default:
+      break;
+   }
 }
 
 
@@ -611,7 +763,7 @@ static void   exporter( PBXProject *root,
    NSString        *name;
    NSMutableArray  *targets;
    NSMutableArray  *others;
-   
+
    targets = [NSMutableArray array];
    rover = [targetNames objectEnumerator];
    while( name = [rover nextObject])
@@ -621,9 +773,9 @@ static void   exporter( PBXProject *root,
          fail( @"target \"%@\" not found", name);
       [targets addObject:pbxtarget];
    }
-   
+
    multipleTargets = [targets count] > 1;
-   
+
    if( cmd == Export)
    {
       if( ! suppressProject)
@@ -733,7 +885,7 @@ static void   exporter( PBXProject *root,
                 "## %s\n"
                 "##\n", [[pbxtarget name] UTF8String]);
       }
-      
+
       target_exporter( pbxtarget, cmd, targets);
    }
 }
@@ -790,12 +942,12 @@ static int   _main( int argc, const char * argv[])
    id              root;
    unsigned int    i, n;
    id              targetNames;
-   
+
    configuration = nil;
    target        = nil;
    verbose       = getenv( "VERBOSE") ? YES : NO;
    targetNames   = nil;
-   
+
    arguments = [[NSProcessInfo processInfo] arguments];
    n         = [arguments count];
 
@@ -837,6 +989,13 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
+      if( [s isEqualToString:@"-u"] ||
+          [s isEqualToString:@"--add-uikit"])
+      {
+         suppressUIKit = NO;
+         continue;
+      }
+
       if( [s isEqualToString:@"-f"] ||
           [s isEqualToString:@"--no-foundation"])
       {
@@ -870,7 +1029,7 @@ static int   _main( int argc, const char * argv[])
       // commands
       if( ! targetNames)
          targetNames = all_target_names( root);
-      
+
       if( [s isEqualToString:@"export"])
       {
          exporter( root, Export, targetNames, file);

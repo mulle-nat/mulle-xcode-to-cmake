@@ -4,7 +4,8 @@ A little tool to convert [Xcode](https://developer.apple.com/xcode/) projects to
 
 You can specify the target to export. If you don't specify a target,  all targets are exported. 
 It doesn't do a perfect job, but it's better than doing it all by hand.
-It can convert library, framework and tool targets. 
+It can convert most targets, but it will do better with libraries and tools or
+frameworks.
 
 
 Fork      |  Build Status | Master Version
@@ -28,9 +29,11 @@ brew install mulle-kybernetik/software/mulle-xcode-to-cmake
 usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>
 
 Options:
-	-t <target> : target to export
 	-b          : suppress boilerplate definitions
-	-h          : suppress header
+	-f          : suppress Foundation (implicitly added)
+	-p          : suppress project
+	-t <target> : target to export
+	-u          : addd UIKIt
 
 Commands:
 	export      : export CMakeLists.txt to stdout
@@ -125,6 +128,10 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 * output resources too
 * allow to specify multiple targets
 * fix more bugs
+* add -u option, but iOS builds don't work anway
+* somewhat half hearted attempt to also support applications and bundles
+* quote paths with whitespace
+
 
 # 0.1.0
 
