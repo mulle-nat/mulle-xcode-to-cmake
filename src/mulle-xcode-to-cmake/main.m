@@ -282,6 +282,9 @@ static void   print_boilerplate( void)
           "${CMAKE_LIBRARY_PATH}\n"
           ")\n"
           "\n"
+          "set( DEPENDENCIES_DIR dependencies)\n"
+          "set( ADDICTIONS_DIR addictions)\n"
+          "\n"
           "endif()\n"
           "\n");
    printf( "\n"
@@ -338,20 +341,37 @@ static void   print_target_header_comment( NSString *name)
 }
 
 
+static void   print_paths( NSArray *paths,
+                           NSString *name)
+{
+   NSEnumerator      *rover;
+   NSString          *path;
+   
+   printf( "\n"
+          "set( %s\n", [name UTF8String]);
+
+   rover = [[paths sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
+   while( path = [rover nextObject])
+      printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
+
+   printf( ")\n");
+}
+
+
 static void   print_files( NSArray *files,
                            NSString *name,
                            enum Command cmd,
                            BOOL isHeader)
 {
    NSEnumerator      *rover;
+   NSMutableArray    *paths;
+   NSString          *dir;
+   NSString          *path;
    PBXBuildFile      *file;
    PBXFileReference  *reference;
-   NSString          *path;
-   NSString          *dir;
-
-   printf( "\n"
-           "set( %s\n", [name UTF8String]);
-
+   
+   paths = [NSMutableArray array];
+   
    rover = [files objectEnumerator];
    while( file = [rover nextObject])
    {
@@ -367,10 +387,11 @@ static void   print_files( NSArray *files,
                dir = @".";  // needed when subdir does include
             addHeaderDirectory( dir);
          }
-      printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
-   }
 
-   printf( ")\n");
+      [paths addObject:path];
+   }
+   
+   print_paths( paths, name);
 }
 
 
@@ -401,7 +422,7 @@ static void   print_libraries( NSArray *libraries,
    rover = [[libraries sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
    {
-      printf( "%s\n", [path UTF8String]);
+      printf( "${%s_LIBRARY}\n", [path UTF8String]);
    }
    
    printf( ")\n");
@@ -424,9 +445,11 @@ static void   print_find_library( NSDictionary *libraries)
    while( key = [rover nextObject])
    {
       library = [libraries objectForKey:key];
-      printf( "find_library( %s_LIBRARY %s)\n", [library UTF8String], [key UTF8String]);
+      printf( "find_library( %s_LIBRARY %s)\n",
+               [library UTF8String], [key UTF8String]);
    }
 }
+
 
 static void   print_prefixed_variable_expansion( char *name, char *prefix, BOOL flag)
 {
@@ -679,7 +702,8 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
 }
 
 
-static void   printcontext_add_library( struct printcontext *ctxt, unsigned int bits)
+static void   printcontext_add_library( struct printcontext *ctxt,
+                                        unsigned int bits)
 {
    switch( ctxt->targetType)
    {
@@ -712,12 +736,10 @@ static void   printcontext_add_library( struct printcontext *ctxt, unsigned int 
 }
 
 
-#pragma mark - Exporter
-
 static void  printcontext_export_target( struct printcontext *ctxt,
-                                         NSArray *targets)
+                                        NSArray *targets)
 {
-   printcontext_add_library( ctxt, ~1);
+   printcontext_add_library( ctxt, -1);
    printcontext_target_include_directories( ctxt);
    printcontext_target_dependencies( ctxt, targets);
    printcontext_target_link_libraries( ctxt);
@@ -726,6 +748,11 @@ static void  printcontext_export_target( struct printcontext *ctxt,
 }
 
 
+#pragma mark - Exporter
+
+//
+// TODO: https://stackoverflow.com/questions/22278381/cmake-add-library-followed-by-install-library-destination?rq=1
+//
 static void   export_target( PBXTarget *pbxtarget,
                              NSArray *targets)
 {
@@ -781,9 +808,9 @@ static void   export_target( PBXTarget *pbxtarget,
       ctxt3.targetType    = SharedLibrary;
       ctxt3.s_target_name = [sharedName UTF8String];
 
-      print_target_header_comment( sharedName);
 
       // emit another add_library for shared
+      print_target_header_comment( sharedName);
       printcontext_add_library( &ctxt3, 1);
 
       printf( "\n"
@@ -1039,7 +1066,10 @@ static void   exporter( PBXProject *root,
    {
       pbxtarget = find_target_by_name( root, name);
       if( ! pbxtarget)
+      {
          fail( @"target \"%@\" not found", name);
+         return;
+      }
       [targets addObject:pbxtarget];
    }
 
@@ -1078,12 +1108,7 @@ static void   exporter( PBXProject *root,
    others = nil;
    rover = [targets objectEnumerator];
    while( pbxtarget = [rover nextObject])
-   {
-      if( cmd == Export && multipleTargets)
-         print_target_header_comment( [pbxtarget name]);
-
       export_target( pbxtarget, targets);
-   }
 }
 
 

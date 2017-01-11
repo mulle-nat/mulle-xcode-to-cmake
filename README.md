@@ -131,6 +131,9 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 * don't emit link commands for static library targets
 * add -s option
 * slight reorganization of code
+* output filepaths sorted
+* fix some bugs
+* improved boiler-plate code
 
 
 ##### 0.2.0
@@ -141,7 +144,6 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 * add -u option, but iOS builds don't work anway
 * somewhat half hearted attempt to also support applications and bundles
 * quote paths with whitespace
-
 
 ##### 0.1.0
 
