@@ -126,6 +126,14 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
+##### 0.4.0
+
+* whitespace in target names is converted to '-' 
+* bundle targets are supported now
+* added -n flag
+* fix framework resource copy stage
+
+
 ##### 0.3.0
 
 * don't emit link commands for static library targets

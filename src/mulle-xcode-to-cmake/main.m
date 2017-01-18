@@ -93,6 +93,7 @@ static char   tail_MacOSXBundleInfo[] =
 static BOOL   verbose;
 static BOOL   alwaysPrefix;
 static BOOL   dualLibrary;
+static BOOL   suppressTrace;
 static BOOL   suppressBoilerplate;
 static BOOL   suppressProject;
 static BOOL   suppressFoundation;
@@ -126,6 +127,12 @@ static void   addStaticLibrariesToFind( NSString *name, NSString *library)
 }
 
 
+static void   resetHeaderDirectories( void)
+{
+   [headerDirectories removeAllObjects];
+}
+
+
 static void   addHeaderDirectory( NSString *path)
 {
    if( ! headerDirectories)
@@ -146,6 +153,7 @@ static void   usage()
            "\t-b          : suppress boilerplate definitions\n"
            "\t-d          : create static and shared library\n"
            "\t-f          : suppress Foundation (implicitly added)\n"
+           "\t-n          : suppress find_library trace\n"
            "\t-p          : suppress project\n"
            "\t-s <suffix> : create standalone test library (framework/shared)\n"
            "\t-t <target> : target to export\n"
@@ -178,6 +186,17 @@ static NSString   *makeMacroName( NSString *s)
                                  separatorString:@"_"
                                       useAllCaps:YES];
    return( [s uppercaseString]);
+}
+
+
+static NSString   *unwhitenedNameIfNeeded( NSString *s)
+{
+   NSCharacterSet   *set;
+   NSArray          *components;
+   
+   set        = [NSCharacterSet whitespaceCharacterSet];
+   components = [s componentsSeparatedByCharactersInSet:set];
+   return( [components componentsJoinedByString:@"-"]);
 }
 
 
@@ -447,14 +466,16 @@ static void   print_find_library( NSDictionary *libraries)
       library = [libraries objectForKey:key];
       printf( "find_library( %s_LIBRARY %s)\n",
                [library UTF8String], [key UTF8String]);
+      if( ! suppressTrace)
+         printf( "message( STATUS \"%s_LIBRARY is ${%s_LIBRARY}\")\n",
+                [library UTF8String], [library UTF8String]);
    }
 }
 
 
 static void   print_prefixed_variable_expansion( char *name, char *prefix, BOOL flag)
 {
-
-if( flag)
+   if( flag)
    {
       name = printf( "${%s_%s}\n", prefix, name);
       return;
@@ -650,8 +671,17 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 ctxt->s_target_name);
          break;
          
-      case Application   :
       case Bundle        :
+         printf( "\n"
+                "if (APPLE)\n"
+                "   set_target_properties( %s PROPERTIES\n"
+                "BUNDLE TRUE\n"
+                "MACOSX_BUNDLE_INFO_PLIST \"${CMAKE_CURRENT_SOURCE_DIR}/%s-Info.plist.in\"\n"
+                ")\n"
+                "endif()\n",
+                ctxt->s_target_name,
+                ctxt->s_target_name);
+      case Application   :
       case Unknown       :
          printf( "\n"
                 "if (APPLE)\n"
@@ -709,18 +739,23 @@ static void   printcontext_add_library( struct printcontext *ctxt,
    {
       case StaticLibrary :
          printf( "\n"
-                "add_library( %s STATIC\n", ctxt->s_target_name);
+                 "add_library( %s STATIC\n", ctxt->s_target_name);
          break;
          
       case SharedLibrary :
       case Framework     :
          printf( "\n"
-                "add_library( %s SHARED\n", ctxt->s_target_name);
+                 "add_library( %s SHARED\n", ctxt->s_target_name);
+         break;
+
+      case Bundle :
+         printf( "\n"
+                 "add_library( %s MODULE\n", ctxt->s_target_name);
          break;
          
-      default     :
+      default :
          printf( "\n"
-                "add_executable( %s MACOSX_BUNDLE\n", ctxt->s_target_name);
+                 "add_executable( %s MACOSX_BUNDLE\n", ctxt->s_target_name);
    }
    
    if( bits & 1)
@@ -731,6 +766,8 @@ static void   printcontext_add_library( struct printcontext *ctxt,
       print_prefixed_variable_expansion( "PROJECT_HEADERS", ctxt->s_macro_name, ctxt->multipleTargets);
    if( bits & 8)
       print_prefixed_variable_expansion( "PRIVATE_HEADERS", ctxt->s_macro_name, ctxt->multipleTargets);
+   if( bits & 16)
+      print_prefixed_variable_expansion( "RESOURCES", ctxt->s_macro_name, ctxt->multipleTargets);
    
    printf( ")\n");
 }
@@ -763,13 +800,15 @@ static void   export_target( PBXTarget *pbxtarget,
    NSString              *s;
    NSString              *sharedName;
    BOOL                  multipleTargets;
-   
+
+   //   resetHeaderDirectories();
+
    name = [pbxtarget name];
    
    multipleTargets      = alwaysPrefix ? YES : [targets count] >= 2;
    ctxt.pbxtarget       = pbxtarget;
    ctxt.multipleTargets = multipleTargets;
-   ctxt.s_target_name   = [name UTF8String];
+   ctxt.s_target_name   = [unwhitenedNameIfNeeded( name) UTF8String];
    ctxt.macroName       = makeMacroName( name);
    ctxt.s_macro_name    = [ctxt.macroName UTF8String];
    ctxt.targetType      = get_target_type( pbxtarget);
@@ -1193,7 +1232,14 @@ static int   _main( int argc, const char * argv[])
          hackPrefix = [arguments objectAtIndex:i];
          continue;
       }
-      
+
+      if( [s isEqualToString:@"-n"] ||
+          [s isEqualToString:@"--no-message"])
+      {
+         suppressTrace = YES;
+         continue;
+      }
+
       if( [s isEqualToString:@"-p"] ||
           [s isEqualToString:@"--no-project"])
       {
@@ -1212,8 +1258,8 @@ static int   _main( int argc, const char * argv[])
       }
       
       if( [s isEqualToString:@"-t"] ||
-         [s isEqualToString:@"-target"] ||
-         [s isEqualToString:@"--target"])
+          [s isEqualToString:@"-target"] ||
+          [s isEqualToString:@"--target"])
       {
          if( ++i >= n)
             usage();
