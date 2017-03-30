@@ -34,7 +34,7 @@
 enum Command
 {
    Export,
-   MulleObjCExport,
+   SourceExport,
    List
 };
 
@@ -176,6 +176,7 @@ static void   usage()
            "Commands:\n"
            "\texport      : export CMakeLists.txt to stdout\n"
            "\tlist        : list targets\n"
+           "\tsexport     : export sources and private/public headers only\n"
            "\n"
            "Environment:\n"
            "\tVERBOSE     : dump some info to stderr\n"
@@ -981,7 +982,7 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
    print_files( [pbxphase publicHeaders], name, cmd, YES);
    
-   if( cmd == MulleObjCExport)
+   if( cmd == SourceExport)
       return;
       
    name = @"PROJECT_HEADERS";
@@ -1060,7 +1061,7 @@ static void   export_frameworks_phase( PBXFrameworksBuildPhase *pbxphase,
                                        enum Command cmd,
                                        NSString *prefix)
 {
-   if( cmd == MulleObjCExport)
+   if( cmd == SourceExport)
       return;
    
    collect_libraries( pbxphase, YES);
@@ -1225,7 +1226,7 @@ static void   exporter( PBXProject *root,
    rover = [targets objectEnumerator];
    while( pbxtarget = [rover nextObject])
    {
-      if( cmd == Export || cmd == MulleObjCExport)
+      if( cmd == Export || cmd == SourceExport)
          print_files_header_comment( [pbxtarget name]);
       file_exporter( pbxtarget, cmd, multipleTargets);
    }
@@ -1412,9 +1413,9 @@ static int   _main( int argc, const char * argv[])
          break;
       }
 
-      if( [s isEqualToString:@"mulle-objc-export"])
+      if( [s isEqualToString:@"sexport"])
       {
-         exporter( root, MulleObjCExport, targetNames, file);
+         exporter( root, SourceExport, targetNames, file);
          break;
       }
 

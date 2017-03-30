@@ -33,6 +33,8 @@ Options:
    -b          : suppress boilerplate definitions
    -d          : create static and shared library
    -f          : suppress Foundation (implicitly added)
+   -l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)
+   -m          : include mulle-configuration (affects boilerplate)
    -n          : suppress find_library trace
    -p          : suppress project
    -r          : suppress reminder, what generated this file
@@ -41,9 +43,9 @@ Options:
    -u          : add UIKIt
 
 Commands:
-   export            : export CMakeLists.txt to stdout
-   list              : list targets
-   mulle-objc-export : export only source and header definitions
+   export      : export CMakeLists.txt to stdout
+   list        : list targets
+   sexport     : export sources and private/public headers only
 
 Environment:
    VERBOSE     : dump some info to stderr
@@ -188,10 +190,9 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
-##### 0.5.0
+##### 0.5.2
 
-* add with mulle-objc-export a spezialied too for generateing source and
-header file lists
+* add sexport command for generating source and header file lists
 * added -l switch, also for mulle-objc to specify the project language
 * fix a bug, when files are not group relative in Xcode
 
