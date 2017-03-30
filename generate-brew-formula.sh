@@ -24,6 +24,15 @@ fail()
 [ ! -z "$ARCHIVEURL" ] || fail "no archive url"
 
 
+check_for_xcode_lameness()
+{
+  if fgrep '\\\' *.xcodeproj/project.pbxproj
+  then
+     fail "Escape problems in the Xcode project file"
+  fi
+}
+
+
 check_for_git_tag()
 {
    git rev-parse "${VERSION}" >/dev/null 2>&1 || fail "No tag ${VERSION} found"
@@ -104,6 +113,7 @@ main()
 {
    check_for_git_tag
    check_for_pristine_git_repo
+   check_for_xcode_lameness
    download_and_chksum_archive
    produce_rb_file
 }
