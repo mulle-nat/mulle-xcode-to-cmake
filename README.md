@@ -29,24 +29,24 @@ brew install mulle-kybernetik/software/mulle-xcode-to-cmake
 usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>
 
 Options:
-	-a          : always prefix cmake variables with target
-	-b          : suppress boilerplate definitions
-	-d          : create static and shared library
-	-f          : suppress Foundation (implicitly added)
-	-n          : suppress find_library trace
-	-p          : suppress project
-	-r          : suppress reminder, what generated this file
-	-s <suffix> : create standalone test library (framework/shared)
-	-t <target> : target to export
-	-u          : add UIKIt
+   -a          : always prefix cmake variables with target
+   -b          : suppress boilerplate definitions
+   -d          : create static and shared library
+   -f          : suppress Foundation (implicitly added)
+   -n          : suppress find_library trace
+   -p          : suppress project
+   -r          : suppress reminder, what generated this file
+   -s <suffix> : create standalone test library (framework/shared)
+   -t <target> : target to export
+   -u          : add UIKIt
 
 Commands:
-	export            : export CMakeLists.txt to stdout
-	list              : list targets
+   export            : export CMakeLists.txt to stdout
+   list              : list targets
    mulle-objc-export : export only source and header definitions
 
 Environment:
-	VERBOSE     : dump some info to stderr
+   VERBOSE     : dump some info to stderr
 ```
 
 ### Examples
