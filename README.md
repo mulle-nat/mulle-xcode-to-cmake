@@ -182,6 +182,48 @@ install( TARGETS mullepbx DESTINATION "lib")
 install( FILES ${MULLEPBX_PUBLIC_HEADERS} DESTINATION "include/mullepbx")
 ```
 
+You have your own `CMakeLists.txt` template and just want to `include()`
+the list of sources as they change in the Xcode project:
+
+`mulle-xcode-to-cmake sexport mulle-xcode-to-cmake.xcodeproj` yields:
+
+```console
+##
+## mulle-xcode-to-cmake Files
+##
+
+set( MULLE_XCODE_TO_CMAKE_SOURCES
+src/mulle-xcode-to-cmake/NSArray+Path.m
+src/mulle-xcode-to-cmake/NSString+ExternalName.m
+src/mulle-xcode-to-cmake/PBXHeadersBuildPhase+Export.m
+src/mulle-xcode-to-cmake/PBXPathObject+HierarchyAndPaths.m
+src/mulle-xcode-to-cmake/main.m
+)
+
+
+##
+## mullepbx Files
+##
+
+set( MULLEPBX_PUBLIC_HEADERS
+src/PBXReading/MullePBXUnarchiver.h
+src/PBXReading/PBXObject.h
+src/PBXWriting/MullePBXArchiver.h
+src/PBXWriting/PBXObject+PBXEncoding.h
+)
+
+set( MULLEPBX_SOURCES
+src/PBXReading/MullePBXUnarchiver.m
+src/PBXReading/NSObject+DecodeWithObjectStorage.m
+src/PBXReading/NSString+KeyFromSetterSelector.m
+src/PBXReading/NSString+LeadingDotExpansion.m
+src/PBXReading/PBXObject.m
+src/PBXReading/PBXProjectProxy.m
+src/PBXWriting/MullePBXArchiver.m
+src/PBXWriting/MulleSortedKeyDictionary.m
+src/PBXWriting/PBXObject+PBXEncoding.m
+)
+```
 
 ### History
 
