@@ -19,7 +19,11 @@
    NSUInteger     len;
    NSString         *sub;
    NSMutableString  *result;
-   
+
+   // hackish fix for MulleObjC
+   if( [s containsString:@"MulleObjC"])
+      s = [[s componentsSeparatedByString:@"MulleObjC"] componentsJoinedByString:@"MulleObjc"];
+      
    result = [NSMutableString string];
    set    = [NSCharacterSet uppercaseLetterCharacterSet];
 

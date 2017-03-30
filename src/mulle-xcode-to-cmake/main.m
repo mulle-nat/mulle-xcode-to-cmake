@@ -34,6 +34,7 @@
 enum Command
 {
    Export,
+   MulleObjCExport,
    List
 };
 
@@ -90,15 +91,24 @@ static char   tail_MacOSXBundleInfo[] =
 
 #pragma mark - Global Configuration
 
+enum CompilerLanguage
+{
+   C_Language,
+   CXX_Language,
+   ObjC_Language
+};
+
 static BOOL   verbose;
 static BOOL   alwaysPrefix;
 static BOOL   dualLibrary;
 static BOOL   suppressTrace;
 static BOOL   suppressBoilerplate;
+static BOOL   enableMulleConfiguration;
 static BOOL   suppressProject;
 static BOOL   suppressReminder;
 static BOOL   suppressFoundation;
 static BOOL   suppressUIKit = YES;
+static enum CompilerLanguage   language=ObjC_Language;
 
 static NSString  *hackPrefix = @"";
 static NSString  *standaloneSuffix = nil;
@@ -154,6 +164,8 @@ static void   usage()
            "\t-b          : suppress boilerplate definitions\n"
            "\t-d          : create static and shared library\n"
            "\t-f          : suppress Foundation (implicitly added)\n"
+           "\t-l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)\n"
+           "\t-m          : include mulle-configuration (affects boilerplate)\n"
            "\t-n          : suppress find_library trace\n"
            "\t-p          : suppress project\n"
            "\t-r          : suppress reminder, what generated this file\n"
@@ -342,6 +354,39 @@ static void   print_boilerplate( void)
 }
 
 
+static void   print_mulle_configuration( void)
+{
+   printf( "\n"
+          "#\n"
+          "# mulle-configuration environment\n"
+          "#\n"
+          "# How to install:\n"
+          "# mulle-bootstrap settings -g -a embedded_repositories 'https://github.com/mulle-nat/mulle-configuration'\n"
+          "# mulle-bootstrap\n"
+          "\n"
+          "set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/mulle-configuration)\n");
+   
+   switch( language)
+   {
+   case C_Language :
+      printf( "set( MULLE_LANGUAGE \"C\")\n");
+      break;
+   case CXX_Language :
+      printf( "set( MULLE_LANGUAGE \"C++\")\n");
+      break;
+   case ObjC_Language :
+      printf( "set( MULLE_LANGUAGE \"ObjC\")\n");
+      break;
+   }
+   
+   printf( "if( \"${CMAKE_BUILD_TYPE}\" STREQUAL \"Debug\")\n"
+          " include( Debug)\n"
+          "else()\n"
+          " include( Release)\n"
+          "endif()\n");
+}
+
+
 static void   print_files_header_comment( NSString *name)
 {
    printf( "\n"
@@ -365,8 +410,8 @@ static void   print_target_header_comment( NSString *name)
 static void   print_paths( NSArray *paths,
                            NSString *name)
 {
-   NSEnumerator      *rover;
-   NSString          *path;
+   NSEnumerator   *rover;
+   NSString       *path;
    
    printf( "\n"
           "set( %s\n", [name UTF8String]);
@@ -384,12 +429,12 @@ static void   print_files( NSArray *files,
                            enum Command cmd,
                            BOOL isHeader)
 {
-   NSEnumerator      *rover;
-   NSMutableArray    *paths;
-   NSString          *dir;
-   NSString          *path;
-   PBXBuildFile      *file;
-   PBXFileReference  *reference;
+   NSEnumerator       *rover;
+   NSMutableArray     *paths;
+   NSString           *dir;
+   NSString           *path;
+   PBXBuildFile       *file;
+   PBXFileReference   *reference;
    
    paths = [NSMutableArray array];
    
@@ -397,7 +442,11 @@ static void   print_files( NSArray *files,
    while( file = [rover nextObject])
    {
       reference = [file fileRef];
-      path      = [reference sourceTreeRelativeFilesystemPath];
+      if( [reference isGroupRelative])
+         path = [reference sourceTreeRelativeFilesystemPath];
+      else
+         path = [reference path];
+      
       if( ! path)
          path = [reference displayName]; // hack (should be path)
       else
@@ -640,10 +689,15 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
 {
    NSString   *headersName;
    NSString   *resourcesName;
+   NSString   *privheadersName;
    
    headersName = @"PUBLIC_HEADERS";
    if( ctxt->multipleTargets)
       headersName = [NSString stringWithFormat:@"%@_%@", ctxt->macroName, headersName];
+
+   privheadersName = @"PRIVATE_HEADERS";
+   if( ctxt->multipleTargets)
+      privheadersName = [NSString stringWithFormat:@"%@_%@", ctxt->macroName, headersName];
 
    resourcesName = @"RESOURCES";
    if( ctxt->multipleTargets)
@@ -661,6 +715,7 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 "# VERSION \"0.0.0\"\n"
                 "# SOVERSION  \"0.0.0\"\n"
                 "PUBLIC_HEADER \"${%s}\"\n"
+                "PRIVATE_HEADER \"${%s}\"\n"
                 "RESOURCE \"${%s}\"\n"
                 ")\n"
                 "\n"
@@ -669,6 +724,7 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 ctxt->s_target_name,
                 ctxt->s_target_name,
                 [headersName UTF8String],
+                [privheadersName UTF8String],
                 [resourcesName UTF8String],
                 ctxt->s_target_name);
          break;
@@ -761,7 +817,7 @@ static void   printcontext_add_library( struct printcontext *ctxt,
    }
    
    if( bits & 1)
-      print_prefixed_variable_expansion( "SOURCES", ctxt->s_macro_name, ctxt->   multipleTargets);
+      print_prefixed_variable_expansion( "SOURCES", ctxt->s_macro_name, ctxt->multipleTargets);
    if( bits & 2)
       print_prefixed_variable_expansion( "PUBLIC_HEADERS", ctxt->s_macro_name, ctxt->multipleTargets);
    if( bits & 4)
@@ -776,9 +832,16 @@ static void   printcontext_add_library( struct printcontext *ctxt,
 
 
 static void  printcontext_export_target( struct printcontext *ctxt,
-                                        NSArray *targets)
+                                         NSArray *targets)
 {
-   printcontext_add_library( ctxt, -1);
+   unsigned int   bits;
+
+   // cmake is messed up, dont try too hard
+   bits = -1;
+   if( ctxt->targetType == Framework)
+      bits = 0x1 | 0x4; // framework gets stuff from target_properties
+   
+   printcontext_add_library( ctxt, bits);
    printcontext_target_include_directories( ctxt);
    printcontext_target_dependencies( ctxt, targets);
    printcontext_target_link_libraries( ctxt);
@@ -918,6 +981,9 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
    print_files( [pbxphase publicHeaders], name, cmd, YES);
    
+   if( cmd == MulleObjCExport)
+      return;
+      
    name = @"PROJECT_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
@@ -994,6 +1060,9 @@ static void   export_frameworks_phase( PBXFrameworksBuildPhase *pbxphase,
                                        enum Command cmd,
                                        NSString *prefix)
 {
+   if( cmd == MulleObjCExport)
+      return;
+   
    collect_libraries( pbxphase, YES);
    collect_libraries( pbxphase, NO);
    
@@ -1006,8 +1075,8 @@ static void   export_frameworks_phase( PBXFrameworksBuildPhase *pbxphase,
 
 
 static void   export_phase( PBXBuildPhase *pbxphase,
-                           enum Command cmd,
-                           NSString *prefix)
+                            enum Command cmd,
+                            NSString *prefix)
 {
    if( verbose)
       fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxphase class]) UTF8String], [[pbxphase name] UTF8String]);
@@ -1056,8 +1125,12 @@ static void   add_implicit_frameworks_if_needed( PBXTarget *pbxtarget)
    }
    
    if( addFoundation)
+   {
+      printf( "# uncomment this for mulle-objc\n"
+              "# set( CMAKE_FIND_FRAMEWORK \"LAST\")\n");
+
       addSharedLibrariesToFind( @"Foundation", @"FOUNDATION");
-   
+   }
    if( addUIKit)
       addSharedLibrariesToFind( @"UIKit", @"UI_KIT");
 }
@@ -1079,7 +1152,8 @@ static void   file_exporter( PBXTarget *pbxtarget,
       return;
    }
    
-   add_implicit_frameworks_if_needed( pbxtarget);
+   if( cmd == Export)
+      add_implicit_frameworks_if_needed( pbxtarget);
    
    rover = [[pbxtarget buildPhases] objectEnumerator];
    while( phase = [rover nextObject])
@@ -1141,21 +1215,24 @@ static void   exporter( PBXProject *root,
          printf( "\ncmake_minimum_required (VERSION 3.4)\n");
       }
 
-      if( ! suppressBoilerplate)
-         print_boilerplate();
+      if( enableMulleConfiguration)
+         print_mulle_configuration();
+      else
+         if( ! suppressBoilerplate)
+            print_boilerplate();
    }
 
    rover = [targets objectEnumerator];
    while( pbxtarget = [rover nextObject])
    {
-      if( cmd == Export)
+      if( cmd == Export || cmd == MulleObjCExport)
          print_files_header_comment( [pbxtarget name]);
       file_exporter( pbxtarget, cmd, multipleTargets);
    }
 
    // ugliness ensues...
 
-   if( cmd == List)
+   if( cmd != Export)
       return;
 
    others = nil;
@@ -1247,6 +1324,30 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
+      if( [s isEqualToString:@"-l"] ||
+         [s isEqualToString:@"--mulle-language"])
+      {
+         if( ++i >= n)
+            usage();
+         
+         s = [[arguments objectAtIndex:i] lowercaseString];
+         if( [s isEqualToString:@"c"])
+            language = C_Language;
+         else
+            if( [s hasPrefix:@"obj"])
+               language = ObjC_Language;
+            else
+               language = CXX_Language;
+         continue;
+      }
+
+      if( [s isEqualToString:@"-m"] ||
+          [s isEqualToString:@"--mulle-configuration"])
+      {
+         enableMulleConfiguration = YES;
+         continue;
+      }
+      
       if( [s isEqualToString:@"-n"] ||
           [s isEqualToString:@"--no-message"])
       {
@@ -1308,6 +1409,12 @@ static int   _main( int argc, const char * argv[])
       if( [s isEqualToString:@"export"])
       {
          exporter( root, Export, targetNames, file);
+         break;
+      }
+
+      if( [s isEqualToString:@"mulle-objc-export"])
+      {
+         exporter( root, MulleObjCExport, targetNames, file);
          break;
       }
 

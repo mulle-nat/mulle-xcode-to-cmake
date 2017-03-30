@@ -41,8 +41,9 @@ Options:
 	-u          : add UIKIt
 
 Commands:
-	export      : export CMakeLists.txt to stdout
-	list        : list targets
+	export            : export CMakeLists.txt to stdout
+	list              : list targets
+   mulle-objc-export : export only source and header definitions
 
 Environment:
 	VERBOSE     : dump some info to stderr
@@ -187,13 +188,20 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
+##### 0.5.0
+
+* add with mulle-objc-export a spezialied too for generateing source and
+header file lists
+* added -l switch, also for mulle-objc to specify the project language
+* fix a bug, when files are not group relative in Xcode
+
 ##### 0.4.1
 
 * add a reminder how this file was generated. Actually useful sometimes.
 
 ##### 0.4.0
 
-* whitespace in target names is converted to '-' 
+* whitespace in target names is converted to '-'
 * bundle targets are supported now
 * added -n flag
 * fix framework resource copy stage
