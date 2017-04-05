@@ -232,6 +232,12 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
+##### 0.5.3
+
+* added another little hack for mulle-objc
+* output commandline arguments in the reminder
+* sexport now also prints the reminder 
+
 ##### 0.5.2
 
 * add sexport command for generating source and header file lists

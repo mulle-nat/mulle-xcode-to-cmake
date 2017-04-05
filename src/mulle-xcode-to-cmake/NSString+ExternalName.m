@@ -20,10 +20,16 @@
    NSString         *sub;
    NSMutableString  *result;
 
-   // hackish fix for MulleObjC
+   // hackish fixes for MulleObjC, should really improve the algorithm
+   // but it's tricky, tricky, tricky
+   
    if( [s containsString:@"MulleObjC"])
       s = [[s componentsSeparatedByString:@"MulleObjC"] componentsJoinedByString:@"MulleObjc"];
-      
+   if( [s containsString:@"BSDFoundation"])
+      s = [[s componentsSeparatedByString:@"BSDFoundation"] componentsJoinedByString:@"BsdFoundation"];
+   if( [s containsString:@"OSFoundation"])
+      s = [[s componentsSeparatedByString:@"OSFoundation"] componentsJoinedByString:@"OsFoundation"];
+   
    result = [NSMutableString string];
    set    = [NSCharacterSet uppercaseLetterCharacterSet];
 

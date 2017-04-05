@@ -367,7 +367,7 @@
 		1DEB927908733DD40010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 0.5.2;
+				CURRENT_PROJECT_VERSION = 0.5.3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DYLIB_CURRENT_VERSION = 0.0.0;
@@ -376,7 +376,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_CFLAGS = (
-					"-DCURRENT_PROJECT_VERSION=\"$(CURRENT_PROJECT_VERSION)\"",
+					"-DCURRENT_PROJECT_VERSION=$(CURRENT_PROJECT_VERSION)",
 					"-Wno-objc-method-access",
 					"-Wno-incomplete-implementation",
 				);
@@ -388,7 +388,7 @@
 		1DEB927A08733DD40010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 0.5.2;
+				CURRENT_PROJECT_VERSION = 0.5.3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DYLIB_CURRENT_VERSION = 0.0.0;
@@ -397,7 +397,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_CFLAGS = (
-					"-DCURRENT_PROJECT_VERSION=\"$(CURRENT_PROJECT_VERSION)\"",
+					"-DCURRENT_PROJECT_VERSION=$(CURRENT_PROJECT_VERSION)",
 					"-Wno-objc-method-access",
 					"-Wno-incomplete-implementation",
 				);
@@ -410,6 +410,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -417,6 +418,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
