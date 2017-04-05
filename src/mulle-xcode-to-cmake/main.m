@@ -29,6 +29,10 @@
 #import "NSString+ExternalName.h"
 
 
+#define stringify( s)  _stringify(s)
+#define _stringify( s) #s
+
+
 #pragma mark Types
 
 enum Command
@@ -1198,14 +1202,20 @@ static void   exporter( PBXProject *root,
          time_t      now;
          struct tm   *tm;
          NSString    *s;
+         NSArray     *arguments;
          
          now = time( NULL);
          tm  = localtime( &now);
 
-         s = [[[NSProcessInfo processInfo] arguments] componentsJoinedByString:@" "];
-         printf( "# Generated on %d-%d-%d %d:%02d:%02d by mulle-xcode-to-cmake %s\n\n",
-            tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
-            [s UTF8String]);
+         arguments = [[NSProcessInfo processInfo] arguments];
+         arguments = [arguments subarrayWithRange:NSMakeRange( 1, [arguments count] - 1)];
+
+         s = [arguments componentsJoinedByString:@" "];
+         printf( "# Generated on %d-%d-%d %d:%02d:%02d by version %s of mulle-xcode-to-cmake\n",
+                tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
+                stringify( CURRENT_PROJECT_VERSION));
+         printf( "# Commandline arguments:\n"
+                 "#    %s\n\n", [s UTF8String]);
       }
    }
 
@@ -1250,10 +1260,6 @@ static void   exporter( PBXProject *root,
 
 
 # pragma mark - main
-
-#define stringify( s)  _stringify(s)
-#define _stringify( s) #s
-
 
 static int   _main( int argc, const char * argv[])
 {
