@@ -105,6 +105,7 @@ enum CompilerLanguage
 static BOOL   verbose;
 static BOOL   alwaysPrefix;
 static BOOL   dualLibrary;
+static BOOL   twoStageCMakeLists;
 static BOOL   suppressTrace;
 static BOOL   suppressBoilerplate;
 static BOOL   enableMulleConfiguration;
@@ -164,6 +165,7 @@ static void   usage()
            "\n"
            "Options:\n"
            ""
+           "\t-2          : CMakeLists.txt includes CMakeSourcesAndHeaders.txt\n"
            "\t-a          : always prefix cmake variables with target\n"
            "\t-b          : suppress boilerplate definitions\n"
            "\t-d          : create static and shared library\n"
@@ -1239,14 +1241,21 @@ static void   exporter( PBXProject *root,
             print_boilerplate();
    }
 
-   rover = [targets objectEnumerator];
-   while( pbxtarget = [rover nextObject])
+   if( twoStageCMakeLists && cmd == Export)
    {
-      if( cmd == Export || cmd == SourceExport)
-         print_files_header_comment( [pbxtarget name]);
-      file_exporter( pbxtarget, cmd, multipleTargets);
+      printf( "\n# produce CMakeSourcesAndHeaders.txt with `mulle-xcode-to-cmake sexport`\n"
+             "\ninclude( CMakeSourcesAndHeaders.txt)\n");
    }
-
+   else
+   {
+      rover = [targets objectEnumerator];
+      while( pbxtarget = [rover nextObject])
+      {
+         if( cmd == Export || cmd == SourceExport)
+            print_files_header_comment( [pbxtarget name]);
+         file_exporter( pbxtarget, cmd, multipleTargets);
+      }
+   }
    // ugliness ensues...
 
    if( cmd != Export)
@@ -1304,6 +1313,13 @@ static int   _main( int argc, const char * argv[])
    {
       s = [arguments objectAtIndex:i];
 
+      if( [s isEqualToString:@"-2"] ||
+          [s isEqualToString:@"--two-stage"])
+      {
+         twoStageCMakeLists = YES;
+         continue;
+      }
+      
       if( [s isEqualToString:@"-a"] ||
           [s isEqualToString:@"--always-prefix"])
       {
