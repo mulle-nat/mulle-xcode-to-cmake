@@ -182,7 +182,7 @@ static void   usage()
            "Commands:\n"
            "\texport      : export CMakeLists.txt to stdout\n"
            "\tlist        : list targets\n"
-           "\tsexport     : export sources and private/public headers only\n"
+           "\tsexport     : export CMakeSourcesAndHeaders.txt to stdout\\n"
            "\n"
            "Environment:\n"
            "\tVERBOSE     : dump some info to stderr\n"

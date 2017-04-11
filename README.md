@@ -29,27 +29,27 @@ brew install mulle-kybernetik/software/mulle-xcode-to-cmake
 usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>
 
 Options:
--2          : CMakeLists.txt includes CMakeSourcesAndHeaders.txt
--a          : always prefix cmake variables with target
--b          : suppress boilerplate definitions
--d          : create static and shared library
--f          : suppress Foundation (implicitly added)
--l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)
--m          : include mulle-configuration (affects boilerplate)
--n          : suppress find_library trace
--p          : suppress project
--r          : suppress reminder, what generated this file
--s <suffix> : create standalone test library (framework/shared)
--t <target> : target to export
--u          : add UIKIt
+   -2          : CMakeLists.txt includes CMakeSourcesAndHeaders.txt
+   -a          : always prefix cmake variables with target
+   -b          : suppress boilerplate definitions
+   -d          : create static and shared library
+   -f          : suppress Foundation (implicitly added)
+   -l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)
+   -m          : include mulle-configuration (affects boilerplate)
+   -n          : suppress find_library trace
+   -p          : suppress project
+   -r          : suppress reminder, what generated this file
+   -s <suffix> : create standalone test library (framework/shared)
+   -t <target> : target to export
+   -u          : add UIKIt
 
 Commands:
-export      : export CMakeLists.txt to stdout
-list        : list targets
-sexport     : export sources and private/public headers only
+   export      : export CMakeLists.txt to stdout
+   list        : list targets
+   sexport     : export CMakeSourcesAndHeaders.txt to stdout
 
 Environment:
-VERBOSE     : dump some info to stderr
+   VERBOSE     : dump some info to stderr
 ```
 
 ### Examples
