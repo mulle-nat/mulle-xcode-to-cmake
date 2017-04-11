@@ -233,11 +233,15 @@ This is basically a stripped down version of `mulle_xcode_utility`.
 
 ### Releasenotes
 
+##### 0.6.1
+
+* improve sexport reminder
+
 ##### 0.6.0
 
 * there is a new option `-2`. It generates a `CMakeLists.txt` that includes
 a file called `CMakeSourcesAndHeaders.txt`. This is a file that you can generate
-with a second run of `mulle-xcode-to-cmake` using `sexport`.
+with an additional run of `mulle-xcode-to-cmake sexport`.
 
 ##### 0.5.4
 

@@ -368,8 +368,9 @@ static void   print_mulle_configuration( void)
           "# mulle-configuration environment\n"
           "#\n"
           "# How to install:\n"
-          "# mulle-bootstrap settings -g -a embedded_repositories 'https://github.com/mulle-nat/mulle-configuration'\n"
-          "# mulle-bootstrap\n"
+          "#    mulle-bootstrap settings -g -a embedded_repositories '${MULLE_REPOSITORIES}/mulle-configuration;;${MULLE_CONFIGURATION_BRANCH:-release}'\n"
+          "#    mulle-bootstrap expansion -g MULLE_REPOSITORIES 'https://github.com/mulle-nat'\n"
+          "#    mulle-bootstrap\n"
           "\n"
           "set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/mulle-configuration)\n");
    
@@ -1216,8 +1217,8 @@ static void   exporter( PBXProject *root,
          printf( "# Generated on %d-%d-%d %d:%02d:%02d by version %s of mulle-xcode-to-cmake\n",
                 tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
                 stringify( CURRENT_PROJECT_VERSION));
-         printf( "# Commandline arguments:\n"
-                 "#    %s\n\n", [s UTF8String]);
+         printf( "# Command line:\n"
+                 "#    mulle-xcode-to-cmake %s\n\n", [s UTF8String]);
       }
    }
 
@@ -1243,8 +1244,16 @@ static void   exporter( PBXProject *root,
 
    if( twoStageCMakeLists && cmd == Export)
    {
-      printf( "\n# produce CMakeSourcesAndHeaders.txt with `mulle-xcode-to-cmake sexport`\n"
-             "\ninclude( CMakeSourcesAndHeaders.txt)\n");
+      printf( "\n##\n"
+              "## Produce CMakeSourcesAndHeaders.txt with:\n");
+      printf( "##   mulle-xcode-to-cmake");
+      rover = [targets objectEnumerator];
+      while( pbxtarget = [rover nextObject])
+         printf( " -t '%s'", [[pbxtarget name] UTF8String]);
+      printf( " sexport > CMakeSourcesAndHeaders.txt\n"
+              "##\n"
+              "\n"
+              "include( CMakeSourcesAndHeaders.txt)\n");
    }
    else
    {
