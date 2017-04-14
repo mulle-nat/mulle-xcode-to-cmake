@@ -432,10 +432,7 @@ static void   print_paths( NSArray *paths,
 }
 
 
-static void   print_files( NSArray *files,
-                           NSString *name,
-                           enum Command cmd,
-                           BOOL isHeader)
+static NSArray   *collect_paths( NSArray *files, BOOL isHeader)
 {
    NSEnumerator       *rover;
    NSMutableArray     *paths;
@@ -468,8 +465,7 @@ static void   print_files( NSArray *files,
 
       [paths addObject:path];
    }
-   
-   print_paths( paths, name);
+   return( paths);
 }
 
 
@@ -486,8 +482,8 @@ static NSString  *generate_library_variablename( NSString *prefix, BOOL isStatic
 
 
 static void   print_libraries( NSArray *libraries,
-                              NSString *prefix,
-                              BOOL isStatic)
+                               NSString *prefix,
+                               BOOL isStatic)
 {
    NSEnumerator      *rover;
    NSString          *path;
@@ -728,12 +724,18 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 ")\n"
                 "\n"
                 "   install( TARGETS %s DESTINATION \"Frameworks\")\n"
-                "endif()\n",
+                "else()\n"
+                "   install( TARGETS %s DESTINATION \"lib\" )\n"
+                "   install( FILES ${PUBLIC_HEADERS} DESTINATION \"include/%s\")\n"
+                "endif()\n"
+                "\n",
                 ctxt->s_target_name,
                 ctxt->s_target_name,
                 [headersName UTF8String],
                 [privheadersName UTF8String],
                 [resourcesName UTF8String],
+                ctxt->s_target_name,
+                ctxt->s_target_name,
                 ctxt->s_target_name);
          break;
          
@@ -983,24 +985,31 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
                                     NSString *prefix)
 {
    NSString  *name;
+   NSArray   *paths;
+   BOOL       shouldPrint;
+   
+   shouldPrint = (cmd == SourceExport) || ! twoStageCMakeLists;
    
    name = @"PUBLIC_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   print_files( [pbxphase publicHeaders], name, cmd, YES);
+   paths = collect_paths( [pbxphase publicHeaders], YES);
+   if( shouldPrint)
+      print_paths( paths, name);
    
-   if( cmd == SourceExport)
-      return;
-      
    name = @"PROJECT_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   print_files( [pbxphase projectHeaders], name, cmd, YES);
+   paths = collect_paths( [pbxphase projectHeaders], YES);
+   if( shouldPrint)
+      print_paths( paths, name);
    
    name = @"PRIVATE_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   print_files( [pbxphase privateHeaders], name, cmd, YES);
+   paths = collect_paths( [pbxphase privateHeaders], YES);
+   if( shouldPrint)
+      print_paths( paths, name);
 }
 
 
@@ -1008,12 +1017,17 @@ static void   export_sources_phase( PBXSourcesBuildPhase *pbxphase,
                                    enum Command cmd,
                                    NSString *prefix)
 {
-   NSString  *name;
+   NSString   *name;
+   NSArray    *paths;
+
+   if( cmd == Export && twoStageCMakeLists)
+      return;
    
    name = @"SOURCES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   print_files( [pbxphase files], name, cmd, NO);
+   paths = collect_paths( [pbxphase files], NO);
+   print_paths( paths, name);
 }
 
 
@@ -1021,12 +1035,17 @@ static void   export_resources_phase( PBXResourcesBuildPhase *pbxphase,
                                       enum Command cmd,
                                       NSString *prefix)
 {
-   NSString  *name;
+   NSString   *name;
+   NSArray    *paths;
+   
+   if( cmd == Export && twoStageCMakeLists)
+      return;
    
    name = @"RESOURCES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   print_files( [pbxphase files], name, cmd, NO);
+   paths = collect_paths( [pbxphase files], NO);
+   print_paths( paths, name);
 }
 
 
@@ -1057,9 +1076,7 @@ static void   collect_libraries( PBXFrameworksBuildPhase *pbxphase,
       }
       else
          if( ! isStatic)
-         {
             addSharedLibrariesToFind( path, libraryName);
-         }
    }
 }
 
@@ -1134,7 +1151,7 @@ static void   add_implicit_frameworks_if_needed( PBXTarget *pbxtarget)
    
    if( addFoundation)
    {
-      printf( "# uncomment this for mulle-objc\n"
+      printf( "# uncomment this for mulle-objc to search libraries first\n"
               "# set( CMAKE_FIND_FRAMEWORK \"LAST\")\n");
 
       addSharedLibrariesToFind( @"Foundation", @"FOUNDATION");
@@ -1165,9 +1182,7 @@ static void   file_exporter( PBXTarget *pbxtarget,
    
    rover = [[pbxtarget buildPhases] objectEnumerator];
    while( phase = [rover nextObject])
-   {
       export_phase( phase, cmd, multipleTargets ? makeMacroName( [pbxtarget name]) : nil);
-   }
 }
 
 
@@ -1255,16 +1270,15 @@ static void   exporter( PBXProject *root,
               "\n"
               "include( CMakeSourcesAndHeaders.txt)\n");
    }
-   else
+
+   rover = [targets objectEnumerator];
+   while( pbxtarget = [rover nextObject])
    {
-      rover = [targets objectEnumerator];
-      while( pbxtarget = [rover nextObject])
-      {
-         if( cmd == Export || cmd == SourceExport)
-            print_files_header_comment( [pbxtarget name]);
-         file_exporter( pbxtarget, cmd, multipleTargets);
-      }
+      if( (cmd == Export && ! twoStageCMakeLists) || cmd == SourceExport)
+         print_files_header_comment( [pbxtarget name]);
+      file_exporter( pbxtarget, cmd, multipleTargets);
    }
+   
    // ugliness ensues...
 
    if( cmd != Export)

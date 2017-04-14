@@ -62,6 +62,7 @@
 		4101507214431CD70019AB2E /* PBXProjectProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PBXProjectProxy.m; sourceTree = "<group>"; };
 		410F65C512C90A6D007EA949 /* PBXProject+Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PBXProject+Settings.h"; sourceTree = "<group>"; };
 		410F65C612C90A6D007EA949 /* PBXProject+Settings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PBXProject+Settings.m"; sourceTree = "<group>"; };
+		411386D61E9E7F12001B50D1 /* RELEASENOTES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASENOTES.md; sourceTree = "<group>"; };
 		411FA53A12DA484F005C2979 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		4121674E12D897FB00D49F14 /* NSString+KeyFromSetterSelector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+KeyFromSetterSelector.h"; sourceTree = "<group>"; };
 		4121674F12D897FB00D49F14 /* NSString+KeyFromSetterSelector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+KeyFromSetterSelector.m"; sourceTree = "<group>"; };
@@ -117,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				41795C0F1BCA80CC00CEB1CE /* README.md */,
+				411386D61E9E7F12001B50D1 /* RELEASENOTES.md */,
 				41F6FBB51BC40248000C60B2 /* src */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
