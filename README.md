@@ -34,6 +34,7 @@ Options:
    -b          : suppress boilerplate definitions
    -d          : create static and shared library
    -f          : suppress Foundation (implicitly added)
+   -i          : print global include_directories
    -l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)
    -m          : include mulle-configuration (affects boilerplate)
    -n          : suppress find_library trace
@@ -42,6 +43,7 @@ Options:
    -s <suffix> : create standalone test library (framework/shared)
    -t <target> : target to export
    -u          : add UIKIt
+   -w <name>   : add weight to name for sorting
 
 Commands:
    export      : export CMakeLists.txt to stdout

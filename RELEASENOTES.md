@@ -1,3 +1,7 @@
+#### 0.6.5
+
+* fix usage, update README.md
+
 #### 0.6.4
 
 * added -w option, so that I can place MulleObjCLoader files last in sorted lists
