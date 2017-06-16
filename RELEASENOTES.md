@@ -1,3 +1,7 @@
+#### 0.6.4
+
+* added -w option, so that I can place MulleObjCLoader files last in sorted lists
+
 #### 0.6.3
 
 * added -i option, mainly to output `include_directories` in `CMakeSourcesAndHeaders.txt`

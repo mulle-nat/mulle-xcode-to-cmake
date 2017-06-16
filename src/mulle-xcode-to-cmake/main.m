@@ -52,6 +52,7 @@ static void   usage()
            "\t-s <suffix> : create standalone test library (framework/shared)\n"
            "\t-t <target> : target to export\n"
            "\t-u          : add UIKIt\n"
+           "\t-w <name>   : add weight to name for sorting"
            "\n"
            "Commands:\n"
            "\texport      : export CMakeLists.txt to stdout\n"
@@ -155,9 +156,32 @@ static BOOL   suppressFoundation;
 static BOOL   suppressUIKit = YES;
 static enum CompilerLanguage   language=ObjC_Language;
 
-static NSString  *hackPrefix = @"";
-static NSString  *standaloneSuffix = nil;
+static NSString        *hackPrefix = @"";
+static NSString        *standaloneSuffix = nil;
+static NSMutableArray  *heavyStrings;
 
+
+@implementation NSString( XcodeWeightedCompare)
+
+- (NSComparisonResult) xcodeWeightedCompare:(id) other
+{
+   NSComparisonResult   result;
+   
+   result = [self compare:other];
+   if( [heavyStrings containsObject:other])
+   {
+      if( [heavyStrings containsObject:self])
+         return( result);
+
+      return( NSOrderedAscending);
+   }
+   
+   if( [heavyStrings containsObject:self])
+      return( NSOrderedDescending);
+   return( result);
+}
+
+@end
 
 #pragma mark - Global Storage
 
@@ -429,7 +453,7 @@ static void   print_paths( NSArray *paths,
    printf( "\n"
           "set( %s\n", [name UTF8String]);
 
-   rover = [[paths sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
+   rover = [[paths sortedArrayUsingSelector:@selector( xcodeWeightedCompare:)] objectEnumerator];
    while( path = [rover nextObject])
       printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
 
@@ -1328,6 +1352,7 @@ static int   _main( int argc, const char * argv[])
    NSString       *file;
    NSString       *s;
    NSString       *target;
+   NSString       *name;
    id             root;
    id             targetNames;
    unsigned int   i, n;
@@ -1484,12 +1509,24 @@ static int   _main( int argc, const char * argv[])
          [targetNames addObject:target];
          continue;
       }
-      
 
       if( [s isEqualToString:@"-u"] ||
           [s isEqualToString:@"--add-uikit"])
       {
          suppressUIKit = NO;
+         continue;
+      }
+
+      if( [s isEqualToString:@"-w"] ||
+          [s isEqualToString:@"--weighted-name"])
+      {
+         if( ++i >= n)
+            usage();
+         
+         name = [arguments objectAtIndex:i];
+         if( ! heavyStrings)
+            heavyStrings = [NSMutableArray array];
+         [heavyStrings addObject:name];
          continue;
       }
 
