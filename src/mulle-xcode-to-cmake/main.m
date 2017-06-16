@@ -29,6 +29,45 @@
 #import "NSString+ExternalName.h"
 
 
+#pragma mark - Usage
+
+static void   usage()
+{
+   fprintf( stderr,
+           "usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>\n"
+           "\n"
+           "Options:\n"
+           ""
+           "\t-2          : CMakeLists.txt includes CMakeSourcesAndHeaders.txt\n"
+           "\t-a          : always prefix cmake variables with target\n"
+           "\t-b          : suppress boilerplate definitions\n"
+           "\t-d          : create static and shared library\n"
+           "\t-f          : suppress Foundation (implicitly added)\n"
+           "\t-i          : print global include_directories\n"
+           "\t-l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)\n"
+           "\t-m          : include mulle-configuration (affects boilerplate)\n"
+           "\t-n          : suppress find_library trace\n"
+           "\t-p          : suppress project\n"
+           "\t-r          : suppress reminder, what generated this file\n"
+           "\t-s <suffix> : create standalone test library (framework/shared)\n"
+           "\t-t <target> : target to export\n"
+           "\t-u          : add UIKIt\n"
+           "\n"
+           "Commands:\n"
+           "\texport      : export CMakeLists.txt to stdout\n"
+           "\tlist        : list targets\n"
+           "\tsexport     : export CMakeSourcesAndHeaders.txt to stdout\\n"
+           "\n"
+           "Environment:\n"
+           "\tVERBOSE     : dump some info to stderr\n"
+           );
+   
+   exit( 1);
+}
+
+
+#pragma mark - Stringification
+
 #define stringify( s)  _stringify(s)
 #define _stringify( s) #s
 
@@ -106,6 +145,7 @@ static BOOL   verbose;
 static BOOL   alwaysPrefix;
 static BOOL   dualLibrary;
 static BOOL   twoStageCMakeLists;
+static BOOL   printGlobalIncludes;
 static BOOL   suppressTrace;
 static BOOL   suppressBoilerplate;
 static BOOL   enableMulleConfiguration;
@@ -154,41 +194,6 @@ static void   addHeaderDirectory( NSString *path)
    if( ! headerDirectories)
       headerDirectories = [NSMutableSet new];
    [headerDirectories addObject:path];
-}
-
-#pragma mark - Usage
-
-static void   usage()
-{
-   fprintf( stderr,
-           "usage: mulle-xcode-to-cmake [options] <commands> <file.xcodeproj>\n"
-           "\n"
-           "Options:\n"
-           ""
-           "\t-2          : CMakeLists.txt includes CMakeSourcesAndHeaders.txt\n"
-           "\t-a          : always prefix cmake variables with target\n"
-           "\t-b          : suppress boilerplate definitions\n"
-           "\t-d          : create static and shared library\n"
-           "\t-f          : suppress Foundation (implicitly added)\n"
-           "\t-l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)\n"
-           "\t-m          : include mulle-configuration (affects boilerplate)\n"
-           "\t-n          : suppress find_library trace\n"
-           "\t-p          : suppress project\n"
-           "\t-r          : suppress reminder, what generated this file\n"
-           "\t-s <suffix> : create standalone test library (framework/shared)\n"
-           "\t-t <target> : target to export\n"
-           "\t-u          : add UIKIt\n"
-           "\n"
-           "Commands:\n"
-           "\texport      : export CMakeLists.txt to stdout\n"
-           "\tlist        : list targets\n"
-           "\tsexport     : export CMakeSourcesAndHeaders.txt to stdout\\n"
-           "\n"
-           "Environment:\n"
-           "\tVERBOSE     : dump some info to stderr\n"
-         );
-
-   exit( 1);
 }
 
 
@@ -554,6 +559,20 @@ struct printcontext
 };
 
 
+static void   print_include_directories( void)
+{
+   NSEnumerator   *rover;
+   NSString       *path;
+   
+   printf( "\n" "include_directories( \n");
+   
+   rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
+   while( path = [rover nextObject])
+      printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
+   printf( ")\n");
+}
+
+
 static void   printcontext_target_include_directories( struct printcontext *ctxt)
 {
    NSEnumerator   *rover;
@@ -848,11 +867,12 @@ static void  printcontext_export_target( struct printcontext *ctxt,
 
    // cmake is messed up, dont try too hard
    bits = -1;
-   if( ctxt->targetType == Framework)
-      bits = 0x1 | 0x4; // framework gets stuff from target_properties
+   // if( ctxt->targetType == Framework)
+   //   bits = 0x1 | 0x4; // framework gets stuff from target_properties ?
    
    printcontext_add_library( ctxt, bits);
-   printcontext_target_include_directories( ctxt);
+   if( ! printGlobalIncludes)
+      printcontext_target_include_directories( ctxt);
    printcontext_target_dependencies( ctxt, targets);
    printcontext_target_link_libraries( ctxt);
    printcontext_source_files_properties( ctxt);
@@ -1150,12 +1170,7 @@ static void   add_implicit_frameworks_if_needed( PBXTarget *pbxtarget)
    }
    
    if( addFoundation)
-   {
-      printf( "# uncomment this for mulle-objc to search libraries first\n"
-              "# set( CMAKE_FIND_FRAMEWORK \"LAST\")\n");
-
       addSharedLibrariesToFind( @"Foundation", @"FOUNDATION");
-   }
    if( addUIKit)
       addSharedLibrariesToFind( @"UIKit", @"UI_KIT");
 }
@@ -1178,8 +1193,12 @@ static void   file_exporter( PBXTarget *pbxtarget,
    }
    
    if( cmd == Export)
+   {
+      printf( "\n# uncomment this for mulle-objc to search libraries first\n"
+              "# set( CMAKE_FIND_FRAMEWORK \"LAST\")\n");
+
       add_implicit_frameworks_if_needed( pbxtarget);
-   
+   }
    rover = [[pbxtarget buildPhases] objectEnumerator];
    while( phase = [rover nextObject])
       export_phase( phase, cmd, multipleTargets ? makeMacroName( [pbxtarget name]) : nil);
@@ -1277,6 +1296,15 @@ static void   exporter( PBXProject *root,
       if( (cmd == Export && ! twoStageCMakeLists) || cmd == SourceExport)
          print_files_header_comment( [pbxtarget name]);
       file_exporter( pbxtarget, cmd, multipleTargets);
+   }
+
+   if( printGlobalIncludes)
+   {
+      printf( "\n"
+              "##\n"
+              "## Include directories for headers\n"
+              "##\n");
+      print_include_directories();
    }
    
    // ugliness ensues...
@@ -1380,8 +1408,15 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
+      if( [s isEqualToString:@"-i"] ||
+          [s isEqualToString:@"--print-includes"])
+      {
+         printGlobalIncludes = YES;
+         continue;
+      }
+
       if( [s isEqualToString:@"-l"] ||
-         [s isEqualToString:@"--mulle-language"])
+          [s isEqualToString:@"--mulle-language"])
       {
          if( ++i >= n)
             usage();
