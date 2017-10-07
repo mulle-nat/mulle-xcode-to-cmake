@@ -17,8 +17,11 @@ generate_brew_formula_build()
    local name="$2"
    local version="$3"
 
-   generate_brew_formula_mulle_build "${project}" "${name}" "${version}"
-   generate_brew_formula_mulle_test  "${project}" "${name}" "${version}"
+   cat <<EOF
+   def install
+      system "xcodebuild", "DSTROOT=#{prefix}", "INSTALL_PATH=/bin", "install"
+   end
+EOF
 }
 
 
