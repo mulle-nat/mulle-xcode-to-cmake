@@ -2,10 +2,10 @@
 # If you don't have this file, there will be no homebrew
 # formula operations.
 #
-PROJECT="mulle-xcode-to-cmake"      # your project/repository name
-DESC="mulle-xcode-to-cmake is ..."
-# LANGUAGE="c"             # c,cpp, objc, bash ...
-# NAME="${PROJECT}"        # formula filename without .rb extension
+PROJECT="mulle-xcode-to-cmake"     # your project/repository name
+DESC="🎭 Convert Xcode projects to cmake CMakeLists.txt "
+LANGUAGE="objc"                       # c,cpp, objc, bash ...
+# NAME="${PROJECT}"                # formula filename without .rb extension
 
 #
 # Specify needed homebrew packages by name as you would when saying
@@ -24,6 +24,6 @@ DESC="mulle-xcode-to-cmake is ..."
 # edit bin/release.sh. Need to specify mulle-build dependencies
 # so that brew picks up the internal path!
 #
-BUILD_DEPENDENCIES='${BOOTSTRAP_TAP}mulle-build
-${BOOTSTRAP_TAP}mulle-bootstrap
-' # cmake may be useful to add
+#BUILD_DEPENDENCIES='${BOOTSTRAP_TAP}mulle-build
+#${BOOTSTRAP_TAP}mulle-bootstrap
+#' # cmake may be useful to add
