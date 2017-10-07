@@ -1,3 +1,7 @@
+### 0.6.6
+
+* modernize formula generation
+
 #### 0.6.5
 
 * fix usage, update README.md

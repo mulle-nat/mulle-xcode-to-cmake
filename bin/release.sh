@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 #
-#   Copyright (c) 2017 Nat! - Codeon GmbH
+#   Copyright (c) 2017 Nat! - Mulle kybernetiK
 #   All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
@@ -37,34 +37,8 @@
 #   ./bin/release.sh -v -n --publisher mulle-nat --publisher-tap mulle-kybernetik/software/
 #
 
-EXE_DIR="`dirname -- $0`"
-
-# if there is a release-info.sh file read it
-if [ -f "${EXE_DIR}/release-info.sh" ]
-then
-   DO_GIT_RELEASE="YES"
-   . "${EXE_DIR}/release-info.sh"
-fi
-
-# if there is a formula-info.sh file read it
-if [ -f "${EXE_DIR}/formula-info.sh" ]
-then
-   DO_GENERATE_FORMULA="YES"
-   . "${EXE_DIR}/formula-info.sh"
-fi
-
-#
-# If there is a - possibly .gitignored - tap-info.sh file read it.
-# It could store PUBLISHER and PUBLISHER_TAP
-#
-if [ -f "${EXE_DIR}/tap-info.sh" ]
-then
-   . "${EXE_DIR}/tap-info.sh"
-fi
-
-
 #######
-# If you are using mulle-build, you don't hafta change anything after this
+# If you are using mulle-build, you don't hafta change anything
 #######
 
 #
@@ -76,15 +50,8 @@ generate_brew_formula_build()
    local name="$2"
    local version="$3"
 
-   cat <<EOF
-   def install
-      xcodebuild "install", "-target", "${project}", "DSTROOT=/", "INSTALL_PATH=#{bin}"
-   end
-
-   test do
-      system "#{bin}/${project}", "-version"
-   end
-EOF
+   generate_brew_formula_mulle_build "${project}" "${name}" "${version}"
+   generate_brew_formula_mulle_test  "${project}" "${name}" "${version}"
 }
 
 
@@ -106,18 +73,15 @@ generate_brew_formula()
    _generate_brew_formula "$@"
 }
 
+
 #######
 # Ideally changes to the following values are done with the command line
 # which makes it easier for forks.
 #######
 
 MULLE_BOOTSTRAP_FAIL_PREFIX="`basename -- $0`"
-MULLE_HOMEBREW_VERSION="4.1.0"
+MULLE_HOMEBREW_VERSION="5.2.1"
 
-#
-# prefer local mulle-homebrew if available
-# Do not embed it anymore!
-#
 if [ -z "`command -v mulle-homebrew-env`" ]
 then
    cat <<EOF >&2
@@ -131,6 +95,7 @@ fi
 INSTALLED_MULLE_HOMEBREW_VERSION="`mulle-homebrew-env version`" || exit 1
 LIBEXEC_DIR="`mulle-homebrew-env libexec-path`" || exit 1
 
+. "${LIBEXEC_DIR}/mulle-files.sh"       || exit 1
 . "${LIBEXEC_DIR}/mulle-homebrew.sh"    || exit 1
 . "${LIBEXEC_DIR}/mulle-git.sh"         || exit 1
 . "${LIBEXEC_DIR}/mulle-version.sh"     || exit 1
@@ -141,7 +106,7 @@ main()
 {
    if [ "${DO_GIT_RELEASE}" != "YES" -a "${DO_GENERATE_FORMULA}" != "YES" ]
    then
-      fail "Nothing to do. release-info.sh and formula-info.sh are missing"
+      fail "Nothing to do! bin/version-info.sh and bin/formula-info.sh are missing"
    fi
 
    if [ "${DO_GIT_RELEASE}" = "YES" ]
@@ -163,16 +128,36 @@ main()
       fi
 
       # generate the formula and push it
-      homebrew_main "${PROJECT}" \
-                    "${NAME}" \
-                    "${VERSION}" \
-                    "${DEPENDENCIES}" \
-                    "${BUILD_DEPENDENCIES}" \
-                    "${HOMEPAGE_URL}" \
-                    "${DESC}" \
-                    "${ARCHIVE_URL}" \
-                    "${HOMEBREW_TAP}" \
-                    "${RBFILE}"
+      if ! homebrew_main "${PROJECT}" \
+                         "${NAME}" \
+                         "${VERSION}" \
+                         "${DEPENDENCIES}" \
+                         "${BUILD_DEPENDENCIES}" \
+                         "${HOMEPAGE_URL}" \
+                         "${DESC}" \
+                         "${ARCHIVE_URL}" \
+                         "${HOMEBREW_TAP}" \
+                         "${RBFILE}"
+      then
+         return 1
+      fi
+   fi
+
+   #
+   # check if someone installed a post_release function
+   # if yes call it (maybe calls mulle-homebrew-debian)
+   #
+   if [ "`type -t post_release`" = "function" ]
+   then
+      post_release "${PROJECT}" \
+                   "${NAME}" \
+                   "${VERSION}" \
+                   "${DEPENDENCIES}" \
+                   "${BUILD_DEPENDENCIES}" \
+                   "${HOMEPAGE_URL}" \
+                   "${DESC}" \
+                   "${ARCHIVE_URL}" \
+                   "${DEBIAN_DEPENDENCIES}"
    fi
 }
 
