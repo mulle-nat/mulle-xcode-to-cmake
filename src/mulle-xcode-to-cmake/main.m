@@ -582,33 +582,32 @@ struct printcontext
 };
 
 
-static void   print_include_directories( void)
+static void   _print_include_directory_paths( void)
 {
    NSEnumerator   *rover;
    NSString       *path;
    
-   printf( "\n" "include_directories( \n");
-   
    rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
       printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
+}
+
+
+static void   print_include_directories( void)
+{
+   printf( "\n" "include_directories( \n");
+   _print_include_directory_paths();
    printf( ")\n");
 }
 
 
 static void   printcontext_target_include_directories( struct printcontext *ctxt)
 {
-   NSEnumerator   *rover;
-   NSString       *path;
-   
    printf( "\n"
           "target_include_directories( %s\n"
           "   PUBLIC\n",
           ctxt->s_target_name);
-   
-   rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
-   while( path = [rover nextObject])
-      printf( "      %s\n", [quotedPathIfNeeded( path) UTF8String]);
+   _print_include_directory_paths();
    printf( ")\n");
 }
 
@@ -1027,32 +1026,42 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
                                     enum Command cmd,
                                     NSString *prefix)
 {
-   NSString  *name;
-   NSArray   *paths;
+   NSString   *name;
+   NSArray    *publicpaths;
+   NSArray    *projectpaths;
+   NSArray    *privatepaths;
    BOOL       shouldPrint;
    
    shouldPrint = (cmd == SourceExport) || ! twoStageCMakeLists;
-   
+
+   // collect header dirs as a side product
+   publicpaths  = collect_paths( [pbxphase publicHeaders], YES);
+   projectpaths = collect_paths( [pbxphase projectHeaders], YES);
+   privatepaths = collect_paths( [pbxphase privateHeaders], YES);
+
+   name = @"INCLUDE_DIRS";
+   if( [prefix length])
+      name = [NSString stringWithFormat:@"%@_%@", prefix, name];
+   if( shouldPrint)
+      print_paths( [headerDirectories allObjects], name);
+
    name = @"PUBLIC_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   paths = collect_paths( [pbxphase publicHeaders], YES);
    if( shouldPrint)
-      print_paths( paths, name);
+      print_paths( publicpaths, name);
    
    name = @"PROJECT_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   paths = collect_paths( [pbxphase projectHeaders], YES);
    if( shouldPrint)
-      print_paths( paths, name);
+      print_paths( projectpaths, name);
    
    name = @"PRIVATE_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   paths = collect_paths( [pbxphase privateHeaders], YES);
    if( shouldPrint)
-      print_paths( paths, name);
+      print_paths( privatepaths, name);
 }
 
 
