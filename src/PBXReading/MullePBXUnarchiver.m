@@ -38,8 +38,11 @@ static NSDictionary   *_openDictionary( NSString *path, NSPropertyListFormat *fo
 
    *error = nil;
    data = [NSData dataWithContentsOfFile:path
+#ifdef __APPLE__
                                  options:0
-                                   error:error];
+                                   error:error
+#endif
+                                              ];
    if( ! data)
       return( nil);
    
@@ -90,7 +93,7 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
                   format:@"Couldn't create class for %@", name];
    
    objc_registerClassPair( subclass);
-#ifndef DEBUG
+#if !defined(DEBUG) && defined(__APPLE__)
    if( NSDebugEnabled)
 #endif
       NSLog( @"dynamically created %@ class", name);
