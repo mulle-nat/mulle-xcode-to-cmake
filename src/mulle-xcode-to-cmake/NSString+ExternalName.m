@@ -33,7 +33,7 @@
          s = [[s componentsSeparatedByString:@"OSFoundation"] componentsJoinedByString:@"OsFoundation"];
    }
    else
-#else
+#endif
    {
       if( [s rangeOfString:@"MulleObjC"].length)
          s = [[s componentsSeparatedByString:@"MulleObjC"] componentsJoinedByString:@"MulleObjc"];
@@ -42,7 +42,6 @@
       if( [s rangeOfString:@"OSFoundation"].length)
          s = [[s componentsSeparatedByString:@"OSFoundation"] componentsJoinedByString:@"OsFoundation"];
    }
-#endif
 
    result = [NSMutableString string];
    set    = [NSCharacterSet uppercaseLetterCharacterSet];
