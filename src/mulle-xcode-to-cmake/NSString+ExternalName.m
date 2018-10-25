@@ -22,14 +22,27 @@
 
    // hackish fixes for MulleObjC, should really improve the algorithm
    // but it's tricky, tricky, tricky
-   
-   if( [s containsString:@"MulleObjC"])
-      s = [[s componentsSeparatedByString:@"MulleObjC"] componentsJoinedByString:@"MulleObjc"];
-   if( [s containsString:@"BSDFoundation"])
-      s = [[s componentsSeparatedByString:@"BSDFoundation"] componentsJoinedByString:@"BsdFoundation"];
-   if( [s containsString:@"OSFoundation"])
-      s = [[s componentsSeparatedByString:@"OSFoundation"] componentsJoinedByString:@"OsFoundation"];
-   
+#if defined(__APPLE__) || !defined(GNUSTEP)
+   if([s respondsToSelector:@selector(containsString)])
+   {
+      if( [s containsString:@"MulleObjC"])
+         s = [[s componentsSeparatedByString:@"MulleObjC"] componentsJoinedByString:@"MulleObjc"];
+      if( [s containsString:@"BSDFoundation"])
+         s = [[s componentsSeparatedByString:@"BSDFoundation"] componentsJoinedByString:@"BsdFoundation"];
+      if( [s containsString:@"OSFoundation"])
+         s = [[s componentsSeparatedByString:@"OSFoundation"] componentsJoinedByString:@"OsFoundation"];
+   }
+   else
+#endif
+   {
+      if( [s rangeOfString:@"MulleObjC"].length)
+         s = [[s componentsSeparatedByString:@"MulleObjC"] componentsJoinedByString:@"MulleObjc"];
+      if( [s rangeOfString:@"BSDFoundation"].length)
+         s = [[s componentsSeparatedByString:@"BSDFoundation"] componentsJoinedByString:@"BsdFoundation"];
+      if( [s rangeOfString:@"OSFoundation"].length)
+         s = [[s componentsSeparatedByString:@"OSFoundation"] componentsJoinedByString:@"OsFoundation"];
+   }
+
    result = [NSMutableString string];
    set    = [NSCharacterSet uppercaseLetterCharacterSet];
 
