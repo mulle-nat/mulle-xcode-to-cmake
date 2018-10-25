@@ -1,3 +1,9 @@
+## 0.7.0
+
+* raise baseline to 10.6 for Xcode 10
+* emit `INCLUDE_DIRS` now for newer mulle-configuration compatibility
+
+
 ### 0.6.6
 
 * modernize formula generation

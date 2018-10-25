@@ -1,12 +1,16 @@
 # mulle-xcode-to-cmake
 
-A little tool to convert [Xcode](https://developer.apple.com/xcode/) projects to [cmake](https://cmake.org/) CMakeLists.txt
+A little tool to convert [Xcode](https://developer.apple.com/xcode/) projects
+to [cmake](https://cmake.org/) CMakeLists.txt.
 
-You can specify the target to export. If you don't specify a target,  all targets are exported.
+You can specify the target to export. If you don't specify a target, all
+targets are exported.
 It doesn't do a perfect job, but it's better than doing it all by hand.
 It can convert most targets, but it will do better with libraries and tools or
 frameworks.
 
+> This is useful for "one-shot" conversions. For continous conversions from
+> Xcode to cmake, the author prefers to use [mulle-match](https://github.com/mulle-sde/mulle-match) together with [cmake-source-update](https://github.com/mulle-sde/mulle-sde-developer/blob/release/src/mulle-sde/cmake/share/bin/cmake-source-update).
 
 Fork      |  Build Status | Master Version
 ----------|---------------|-----------------------------------
