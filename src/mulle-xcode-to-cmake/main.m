@@ -560,7 +560,7 @@ static void   print_prefixed_variable_expansion( char *name, char *prefix, BOOL 
 {
    if( flag)
    {
-      name = printf( "${%s_%s}\n", prefix, name);
+      printf( "${%s_%s}\n", prefix, name);
       return;
    }
    printf( "${%s}\n", name);
