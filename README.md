@@ -10,7 +10,7 @@ It can convert most targets, but it will do better with libraries and tools or
 frameworks.
 
 > This is useful for "one-shot" conversions. For continous conversions from
-> Xcode to cmake, the author prefers to use [mulle-match](https://github.com/mulle-sde/mulle-match) together with [cmake-source-update](https://github.com/mulle-sde/mulle-sde-developer/blob/release/src/mulle-sde/cmake/share/bin/cmake-source-update).
+> Xcode to cmake the author prefers to use [mulle-match](https://github.com/mulle-sde/mulle-match) together with [mulle-match-to-cmake](https://raw.githubusercontent.com/mulle-sde/mulle-match/release/mulle-match-to-cmake) nowadays.
 
 Fork      |  Build Status | Master Version
 ----------|---------------|-----------------------------------
