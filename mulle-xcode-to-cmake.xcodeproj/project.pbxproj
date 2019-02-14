@@ -185,22 +185,6 @@
 			path = src/PBXWriting;
 			sourceTree = "<group>";
 		};
-		4138C84C12DA2F5400980090 /* PBXSupport */ = {
-			isa = PBXGroup;
-			children = (
-				41786F9B12C7E08F0010EB6D /* PBXPathObject+HierarchyAndPaths.h */,
-				41786F9C12C7E08F0010EB6D /* PBXPathObject+HierarchyAndPaths.m */,
-				415CE1641487CAD300578330 /* PBXTarget+HierarchyAndPaths.h */,
-				415CE1651487CAD300578330 /* PBXTarget+HierarchyAndPaths.m */,
-				410F65C512C90A6D007EA949 /* PBXProject+Settings.h */,
-				410F65C612C90A6D007EA949 /* PBXProject+Settings.m */,
-				418C5D6713AE2C9900E14843 /* PBXProject+VirtualProjectRoot.h */,
-				418C5D6813AE2CAF00E14843 /* PBXProject+VirtualProjectRoot.m */,
-			);
-			name = PBXSupport;
-			path = src/PBXSupport;
-			sourceTree = "<group>";
-		};
 		4167125C1BC3D8BB00B39688 /* mulle-xcode-to-cmake */ = {
 			isa = PBXGroup;
 			children = (
@@ -222,7 +206,6 @@
 			isa = PBXGroup;
 			children = (
 				4167125C1BC3D8BB00B39688 /* mulle-xcode-to-cmake */,
-				4138C84C12DA2F5400980090 /* PBXSupport */,
 				410F609412C80F79007EA949 /* PBXReading */,
 				412167B212D89ED100D49F14 /* PBXWriting */,
 			);
@@ -369,7 +352,7 @@
 		1DEB927908733DD40010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 0.7.0;
+				CURRENT_PROJECT_VERSION = 0.7.1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DYLIB_CURRENT_VERSION = "${CURRENT_PROJECT_VERSION}";
@@ -390,7 +373,7 @@
 		1DEB927A08733DD40010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 0.7.0;
+				CURRENT_PROJECT_VERSION = 0.7.1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DYLIB_CURRENT_VERSION = "${CURRENT_PROJECT_VERSION}";

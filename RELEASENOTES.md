@@ -1,3 +1,8 @@
+### 0.7.1
+
+* Modernized mulle-project packaging
+* Removed unused files from project
+
 ## 0.7.0
 
 * raise baseline to 10.6 for Xcode 10
