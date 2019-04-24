@@ -1,11 +1,11 @@
 /*
    mulle-xcode-to-cmake
-   
+
    $Id: PBXObject.m,v cf43ff7e1447 2011/12/19 16:28:31 nat $
 
    Created by Nat! on 26.12.10.
    Copyright 2010 Mulle kybernetiK
-   
+
    This file is part of mulle-xcode-to-cmake.
 
    mulle-xcode-to-cmake is free software: you can redistribute it and/or modify
@@ -27,6 +27,8 @@
 #import "NSString+KeyFromSetterSelector.h"
 #import "NSString+LeadingDotExpansion.h"
 
+#pragma clang diagnostic ignored "-Wincomplete-implementation"
+
 
 @implementation PBXObject
 
@@ -36,17 +38,17 @@
    abort();
    return( 0);
 }
-   
-   
+
+
 - (id) initWithProject:(PBXProject *) pbx
 {
    [super init];
-   
+
    project_ = pbx;
-   
+
    info_ = [NSMutableDictionary new];
    [self setIsa:NSStringFromClass( [self class])];
-   
+
    return( self);
 }
 
@@ -55,7 +57,7 @@
                      project:(PBXProject *) pbx
 {
    [self initWithProject:pbx];
-   
+
    info_ = [[coder infoForObject:self] mutableCopy];
 
    return( self);
@@ -112,7 +114,7 @@
 - (NSString *) name
 {
    NSString  *s;
-   
+
    s = [self objectForKey:@"name"];
    if( ! s)
    {
@@ -147,7 +149,7 @@
 - (NSMethodSignature *) methodSignatureForSelector:(SEL) aSelector
 {
    NSString  *s;
-   
+
    s = NSStringFromSelector( aSelector);
    if( [s hasSuffix:@":"])
    {
@@ -163,7 +165,7 @@
 {
    NSString   *key;
    id         value;
-   
+
    key = NSStringFromSelector( [anInvocation selector]);
    if( [key hasSuffix:@":"] && [key hasPrefix:@"set"])
    {
@@ -177,7 +179,7 @@
                    forKey:key];
       return;
    }
-   
+
    value = [self objectForKey:key];
    [anInvocation setReturnValue:&value];
 }
@@ -202,11 +204,11 @@
 - (id) valueForKey:(NSString *) key
 {
    id   value;
-   
+
    value = [self objectForKey:key];
    if( value)
       return( value);
-      
+
    return( [super valueForKey:key]);
 }
 
@@ -224,7 +226,7 @@
 - (NSString *) xcodeVirtualName
 {
    NSString  *s;
-   
+
    s = [self name];
    if( s)
       return( s);
@@ -253,7 +255,7 @@
 @end
 
 
-@implementation PBXFileReference 
+@implementation PBXFileReference
 
 - (BOOL) includeInIndex
 {
@@ -281,7 +283,7 @@
 {
    NSDictionary  *settings;
    NSArray       *attributes;
-   
+
    settings   = [self objectForKey:@"settings"];
    attributes = [settings objectForKey:@"ATTRIBUTES"];
    if( [attributes containsObject:@"Private"])
@@ -306,12 +308,12 @@
 @end
 
 
-@implementation PBXGroup 
+@implementation PBXGroup
 
 - (NSString *) debugDescription
 {
    NSString  *children;
-   
+
    children = [[self subgroups] valueForKey:@"displayName"];
    return( [NSString stringWithFormat:@"<%@ %p: \"%@\" (%@)>", [self class], self, [self displayName], children]);
 }
@@ -319,7 +321,7 @@
 @end
 
 
-@implementation PBXVariantGroup 
+@implementation PBXVariantGroup
 
 // hacks for Makefile production removed (so something will be broken there)
 //- (NSString *) sourceTreeRelativeFilesystemPath(PBXGroup *) group
@@ -336,12 +338,12 @@
 @end
 
 
-@implementation PBXContainerItemProxy 
+@implementation PBXContainerItemProxy
 
 - (void) forwardInvocation:(NSInvocation *) anInvocation
 {
    id   value;
-   
+
    value = [self objectForKey:@"containerPortal"];
    [anInvocation invokeWithTarget:value];
 }
@@ -349,7 +351,7 @@
 @end
 
 
-@implementation PBXBuildPhase 
+@implementation PBXBuildPhase
 
 - (unsigned int) buildActionMask
 {
@@ -364,7 +366,7 @@
 @end
 
 
-@implementation PBXFrameworksBuildPhase 
+@implementation PBXFrameworksBuildPhase
 @end
 
 
@@ -372,23 +374,23 @@
 @end
 
 
-@implementation PBXCopyFilesBuildPhase 
+@implementation PBXCopyFilesBuildPhase
 @end
 
 
-@implementation PBXShellScriptBuildPhase 
+@implementation PBXShellScriptBuildPhase
 @end
 
 
-@implementation PBXResourcesBuildPhase 
+@implementation PBXResourcesBuildPhase
 @end
 
 
-@implementation PBXRezBuildPhase 
+@implementation PBXRezBuildPhase
 @end
 
 
-@implementation PBXSourcesBuildPhase 
+@implementation PBXSourcesBuildPhase
 @end
 
 
@@ -417,11 +419,11 @@
 @end
 
 
-@implementation PBXNativeTarget 
+@implementation PBXNativeTarget
 @end
 
 
-@implementation PBXAggregateTarget 
+@implementation PBXAggregateTarget
 @end
 
 
@@ -429,11 +431,11 @@
 @end
 
 
-@implementation XCBuildConfiguration 
+@implementation XCBuildConfiguration
 @end
 
 
-@implementation XCConfigurationList 
+@implementation XCConfigurationList
 
 - (BOOL) defaultConfigurationIsVisible
 {
@@ -443,11 +445,11 @@
 @end
 
 
-@implementation PBXReferenceProxy 
+@implementation PBXReferenceProxy
 @end
 
 
-@implementation PBXProject 
+@implementation PBXProject
 
 - (BOOL) hasScannedForEncodings
 {
@@ -464,11 +466,11 @@
 - (NSString *) absolutePath
 {
    NSString   *path;
-   
+
    if( ! absolutePath_)
    {
       path = path_;
-     
+
       path = [path stringByResolvingWithWorkingDirectory];
       path = [path stringByExpandingTildeInPath];
       path = [path stringByStandardizingPath];
