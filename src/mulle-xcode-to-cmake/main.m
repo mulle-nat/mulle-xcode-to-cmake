@@ -43,8 +43,7 @@ static void   usage()
            "\t-d          : create static and shared library\n"
            "\t-f          : suppress Foundation (implicitly added)\n"
            "\t-i          : print global include_directories\n"
-           "\t-l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)\n"
-           "\t-m          : include mulle-configuration (affects boilerplate)\n"
+           "\t-l <lang>   : specify project language (c,c++,objc) (default: objc)\n"
            "\t-n          : suppress find_library trace\n"
            "\t-p          : suppress project\n"
            "\t-r          : suppress reminder, what generated this file\n"
@@ -61,7 +60,7 @@ static void   usage()
            "Environment:\n"
            "\tVERBOSE     : dump some info to stderr\n"
            );
-   
+
    exit( 1);
 }
 
@@ -141,18 +140,17 @@ enum CompilerLanguage
    ObjC_Language
 };
 
-static BOOL   verbose;
-static BOOL   alwaysPrefix;
-static BOOL   dualLibrary;
-static BOOL   twoStageCMakeLists;
-static BOOL   printGlobalIncludes;
-static BOOL   suppressTrace;
-static BOOL   suppressBoilerplate;
-static BOOL   enableMulleConfiguration;
-static BOOL   suppressProject;
-static BOOL   suppressReminder;
-static BOOL   suppressFoundation;
-static BOOL   suppressUIKit = YES;
+static BOOL                    verbose;
+static BOOL                    alwaysPrefix;
+static BOOL                    dualLibrary;
+static BOOL                    twoStageCMakeLists;
+static BOOL                    printGlobalIncludes;
+static BOOL                    suppressTrace;
+static BOOL                    suppressBoilerplate;
+static BOOL                    suppressProject;
+static BOOL                    suppressReminder;
+static BOOL                    suppressFoundation;
+static BOOL                    suppressUIKit = YES;
 static enum CompilerLanguage   language=ObjC_Language;
 
 static NSString        *hackPrefix = @"";
@@ -165,7 +163,7 @@ static NSMutableArray  *heavyStrings;
 - (NSComparisonResult) xcodeWeightedCompare:(id) other
 {
    NSComparisonResult   result;
-   
+
    result = [self compare:other];
    if( [heavyStrings containsObject:other])
    {
@@ -174,7 +172,7 @@ static NSMutableArray  *heavyStrings;
 
       return( NSOrderedAscending);
    }
-   
+
    if( [heavyStrings containsObject:self])
       return( NSOrderedDescending);
    return( result);
@@ -242,24 +240,30 @@ static NSString   *unwhitenedNameIfNeeded( NSString *s)
 {
    NSCharacterSet   *set;
    NSArray          *components;
-   
+
    set        = [NSCharacterSet whitespaceCharacterSet];
    components = [s componentsSeparatedByCharactersInSet:set];
    return( [components componentsJoinedByString:@"-"]);
 }
 
 
-static NSString   *quotedPathIfNeeded( NSString *s)
+static NSString   *quotedStringIfNeeded( NSString *s)
 {
    NSCharacterSet   *set;
-   
+
+   set = [NSCharacterSet whitespaceCharacterSet];
+   if( [s rangeOfCharacterFromSet:set].length != 0)
+      return( [NSString stringWithFormat:@"\"%@\"", s]);
+   return( s);
+}
+
+
+static NSString   *quotedPathIfNeeded( NSString *s)
+{
    if( hackPrefix)
       s = [hackPrefix stringByAppendingString:s];
-   
-   set = [NSCharacterSet whitespaceCharacterSet];
-   if( [s rangeOfCharacterFromSet:set].length == 0)
-      return( s);
-   return( [NSString stringWithFormat:@"\"%@\"", s]);
+
+   return( quotedStringIfNeeded( s));
 }
 
 
@@ -287,10 +291,10 @@ static enum TargetType   get_target_type( PBXTarget *pbxtarget)
 {
    NSString   *fullType;
    NSString   *type;
-   
+
    fullType = [pbxtarget productType];
    type     = [[fullType componentsSeparatedByString:@".product-type."] lastObject];
-   
+
    if( [type isEqualToString:@"library.static"])
       return( StaticLibrary);
    if( [type hasPrefix:@"library"])
@@ -303,7 +307,7 @@ static enum TargetType   get_target_type( PBXTarget *pbxtarget)
       return( Tool);
    if( [type hasPrefix:@"application"])
       return( Application);
-   
+
    fprintf( stderr, "mulle-xcode-to-cmake:unknown target type %s, assuming it's a kind of application\n", [fullType UTF8String]);
    return( Unknown);
 }
@@ -327,31 +331,27 @@ static void   print_boilerplate( void)
 {
    printf( "\n"
           "#\n"
-          "# mulle-bootstrap environment\n"
+          "# mulle-sde environment\n"
           "#\n"
           "\n"
-          "# check if compiling with mulle-bootstrap (works since 2.6)\n"
-          "\n"
-          "if( NOT MULLE_BOOTSTRAP_VERSION)\n"
+          "if( DEPENDENCY_DIR)\n"
           "  include_directories( BEFORE SYSTEM\n"
-          "dependencies/include\n"
-          "addictions/include\n"
+          "${DEPENDENCY_DIR}/include\n"
+          "addiction/include\n"
           ")\n"
           "\n"
           "  set( CMAKE_FRAMEWORK_PATH\n"
-          "dependencies/Frameworks\n"
-          "addictions/Frameworks\n"
+          "${DEPENDENCY_DIR}/Frameworks\n"
+          "${ADDICTION_DIR}/Frameworks\n"
           "${CMAKE_FRAMEWORK_PATH}\n"
           ")\n"
           "\n"
           "  set( CMAKE_LIBRARY_PATH\n"
-          "dependencies/lib\n"
-          "addictions/lib\n"
+          "${DEPENDENCY_DIR}/lib\n"
+          "${ADDICTION_DIR}/lib\n"
           "${CMAKE_LIBRARY_PATH}\n"
           ")\n"
           "\n"
-          "set( DEPENDENCIES_DIR dependencies)\n"
-          "set( ADDICTIONS_DIR addictions)\n"
           "\n"
           "endif()\n"
           "\n");
@@ -389,39 +389,6 @@ static void   print_boilerplate( void)
 }
 
 
-static void   print_mulle_configuration( void)
-{
-   printf( "\n"
-          "#\n"
-          "# mulle-configuration environment\n"
-          "#\n"
-          "# How to install:\n"
-          "#    mulle-bootstrap settings -g -a embedded_repositories '${MULLE_REPOSITORIES}/mulle-configuration;;${MULLE_CONFIGURATION_BRANCH:-release}'\n"
-          "#    mulle-bootstrap expansion -g MULLE_REPOSITORIES 'https://github.com/mulle-nat'\n"
-          "#    mulle-bootstrap\n"
-          "\n"
-          "set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/mulle-configuration)\n");
-   
-   switch( language)
-   {
-   case C_Language :
-      printf( "set( MULLE_LANGUAGE \"C\")\n");
-      break;
-   case CXX_Language :
-      printf( "set( MULLE_LANGUAGE \"C++\")\n");
-      break;
-   case ObjC_Language :
-      printf( "set( MULLE_LANGUAGE \"ObjC\")\n");
-      break;
-   }
-   
-   printf( "if( \"${CMAKE_BUILD_TYPE}\" STREQUAL \"Debug\")\n"
-          " include( Debug)\n"
-          "else()\n"
-          " include( Release)\n"
-          "endif()\n");
-}
-
 
 static void   print_files_header_comment( NSString *name)
 {
@@ -448,7 +415,7 @@ static void   print_paths( NSArray *paths,
 {
    NSEnumerator   *rover;
    NSString       *path;
-   
+
    printf( "\n"
           "set( %s\n", [name UTF8String]);
 
@@ -468,9 +435,9 @@ static NSArray   *collect_paths( NSArray *files, BOOL isHeader)
    NSString           *path;
    PBXBuildFile       *file;
    PBXFileReference   *reference;
-   
+
    paths = [NSMutableArray array];
-   
+
    rover = [files objectEnumerator];
    while( file = [rover nextObject])
    {
@@ -479,7 +446,7 @@ static NSArray   *collect_paths( NSArray *files, BOOL isHeader)
          path = [reference sourceTreeRelativeFilesystemPath];
       else
          path = [reference path];
-      
+
       if( ! path)
          path = [reference displayName]; // hack (should be path)
       else
@@ -501,7 +468,7 @@ static NSArray   *collect_paths( NSArray *files, BOOL isHeader)
 static NSString  *generate_library_variablename( NSString *prefix, BOOL isStatic)
 {
    NSString   *name;
-   
+
    name = isStatic ? @"STATIC_DEPENDENCIES" : @"DEPENDENCIES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
@@ -516,17 +483,17 @@ static void   print_libraries( NSArray *libraries,
    NSEnumerator      *rover;
    NSString          *path;
    NSString          *name;
-   
+
    name = generate_library_variablename( prefix, isStatic);
-   
+
    printf( "\nset( %s\n", [name UTF8String]);
-   
+
    rover = [[libraries sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
    {
       printf( "${%s_LIBRARY}\n", [path UTF8String]);
    }
-   
+
    printf( ")\n");
 }
 
@@ -574,10 +541,10 @@ struct printcontext
    PBXTarget             *pbxtarget;
    char                  *s_target_name;
    enum TargetType       targetType;
-   
+
    NSString              *macroName;
    char                  *s_macro_name;
-   
+
    BOOL                  multipleTargets;
 };
 
@@ -586,7 +553,7 @@ static void   _print_include_directory_paths( void)
 {
    NSEnumerator   *rover;
    NSString       *path;
-   
+
    rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
       printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
@@ -632,7 +599,7 @@ static void   _printcontext_target_link_libraries( struct printcontext *ctxt,
       "${%s}\n"
       "${%s}\n"
       ")\n";
-   
+
    printf( format,
           ctxt->s_target_name,
           [staticName UTF8String],
@@ -644,18 +611,18 @@ static void   printcontext_target_link_libraries( struct printcontext *ctxt)
 {
    NSString   *staticName;
    NSString   *name;
-   
+
    if( ctxt->targetType == StaticLibrary)
       return;
-   
+
    staticName = @"STATIC_DEPENDENCIES";
    if( ctxt->multipleTargets)
       staticName = [NSString stringWithFormat:@"%@_%@", ctxt->macroName, staticName];
-   
+
    name = @"DEPENDENCIES";
    if( ctxt->multipleTargets)
       name = [NSString stringWithFormat:@"%@_%@", ctxt->macroName, name];
-   
+
    _printcontext_target_link_libraries( ctxt, staticName, name);
 }
 
@@ -665,10 +632,10 @@ static void   printcontext_add_dependencies( struct printcontext *ctxt,
                                              NSArray *targets)
 {
    PBXTarget *dsttarget;
-   
+
    if( verbose)
       fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxdependency class]) UTF8String], [[pbxdependency name] UTF8String]);
-   
+
    dsttarget = [pbxdependency target];
    if( ! dsttarget)
    {
@@ -676,13 +643,13 @@ static void   printcontext_add_dependencies( struct printcontext *ctxt,
          fprintf( stderr, "mulle-xcode-to-cmake: can not deal with %s using it's name\n", [[pbxdependency debugDescription] UTF8String]);
       return;
    }
-   
+
    if( ! [targets containsObject:dsttarget])
    {
       fprintf( stderr, "mulle-xcode-to-cmake: can not export dependency to target %s as it is not exported\n", [[dsttarget name] UTF8String]);
       return;
    }
-   
+
    printf( "\n"
           "add_dependencies( %s %s)\n",
           [[ctxt->pbxtarget name] UTF8String],
@@ -714,11 +681,11 @@ static void   printcontext_source_files_properties( struct printcontext *ctxt)
    case Tool          :
       return;
    }
-   
+
    resourcesName = @"RESOURCES";
    if( ctxt->multipleTargets)
       resourcesName = [NSString stringWithFormat:@"%@_%@", ctxt->macroName, resourcesName];
-   
+
    printf( "\n"
           "set_source_files_properties(\n"
           "${%s}\n"
@@ -735,7 +702,7 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
    NSString   *headersName;
    NSString   *resourcesName;
    NSString   *privheadersName;
-   
+
    headersName = @"PUBLIC_HEADERS";
    if( ctxt->multipleTargets)
       headersName = [NSString stringWithFormat:@"%@_%@", ctxt->macroName, headersName];
@@ -779,7 +746,7 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 ctxt->s_target_name,
                 ctxt->s_target_name);
          break;
-         
+
       case Bundle        :
          printf( "\n"
                 "if (APPLE)\n"
@@ -792,41 +759,42 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 ctxt->s_target_name);
       case Application   :
       case Unknown       :
-         printf( "\n"
-                "if (APPLE)\n"
-                "   set_target_properties( %s PROPERTIES\n"
-                "MACOSX_BUNDLE_INFO_PLIST \"${CMAKE_CURRENT_SOURCE_DIR}/%s-Info.plist.in\"\n"
-                ")\n"
-                "endif()\n",
-                ctxt->s_target_name,
-                ctxt->s_target_name);
-         
+         if( ctxt->targetType != Bundle)
+            printf( "\n"
+                   "if (APPLE)\n"
+                   "   set_target_properties( %s PROPERTIES\n"
+                   "MACOSX_BUNDLE_INFO_PLIST \"${CMAKE_CURRENT_SOURCE_DIR}/%s-Info.plist.in\"\n"
+                   ")\n"
+                   "endif()\n",
+                   ctxt->s_target_name,
+                   ctxt->s_target_name);
+
          fprintf( stderr, "You can use this text as %s-Info.plist.in contents:\n"
                  "cat <<EOF > %s-Info.plist.in\n"
                  "%s",
                  ctxt->s_target_name,
                  ctxt->s_target_name,
                  head_MacOSXBundleInfo);
-         
+
          fprintf( stderr,
                  "   <key>CFBundlePackageType</key>\n"
                  "   <string>%s</string>\n",
                   ctxt->targetType == Bundle ? "BNDL" : "APPL");
-         
-         
+
+
          if( ctxt->targetType == Application)
             fprintf( stderr,
                     "   <key>NSPrincipalClass</key>\n"
                     "   <string>NSApplication</string>\n"
                     "   <key>NSMainNibFile</key>\n"
                     "   <string>MainMenu</string>\n");
-         
+
          fprintf( stderr, "%s"
                  "EOF\n",
                  tail_MacOSXBundleInfo);
-         
+
          break;
-         
+
       case SharedLibrary :
       case StaticLibrary :
          printf( "\n"
@@ -850,7 +818,7 @@ static void   printcontext_add_library( struct printcontext *ctxt,
          printf( "\n"
                  "add_library( %s STATIC\n", ctxt->s_target_name);
          break;
-         
+
       case SharedLibrary :
       case Framework     :
          printf( "\n"
@@ -861,12 +829,12 @@ static void   printcontext_add_library( struct printcontext *ctxt,
          printf( "\n"
                  "add_library( %s MODULE\n", ctxt->s_target_name);
          break;
-         
+
       default :
          printf( "\n"
                  "add_executable( %s MACOSX_BUNDLE\n", ctxt->s_target_name);
    }
-   
+
    if( bits & 1)
       print_prefixed_variable_expansion( "SOURCES", ctxt->s_macro_name, ctxt->multipleTargets);
    if( bits & 2)
@@ -877,7 +845,7 @@ static void   printcontext_add_library( struct printcontext *ctxt,
       print_prefixed_variable_expansion( "PRIVATE_HEADERS", ctxt->s_macro_name, ctxt->multipleTargets);
    if( bits & 16)
       print_prefixed_variable_expansion( "RESOURCES", ctxt->s_macro_name, ctxt->multipleTargets);
-   
+
    printf( ")\n");
 }
 
@@ -891,7 +859,7 @@ static void  printcontext_export_target( struct printcontext *ctxt,
    bits = -1;
    // if( ctxt->targetType == Framework)
    //   bits = 0x1 | 0x4; // framework gets stuff from target_properties ?
-   
+
    printcontext_add_library( ctxt, bits);
    if( ! printGlobalIncludes)
       printcontext_target_include_directories( ctxt);
@@ -921,7 +889,7 @@ static void   export_target( PBXTarget *pbxtarget,
    //   resetHeaderDirectories();
 
    name = [pbxtarget name];
-   
+
    multipleTargets      = alwaysPrefix ? YES : [targets count] >= 2;
    ctxt.pbxtarget       = pbxtarget;
    ctxt.multipleTargets = multipleTargets;
@@ -950,13 +918,13 @@ static void   export_target( PBXTarget *pbxtarget,
 
    // if we convert to standalone, print static library first
    // then print shared library, that depends on static
-   
+
    ctxt2 = ctxt;
    ctxt3 = ctxt;
-   
+
    ctxt.targetType      = StaticLibrary;
    printcontext_export_target( &ctxt, targets);
-   
+
    if( dualLibrary)
    {
       sharedName = [name stringByAppendingString:@"_shared"];
@@ -984,16 +952,16 @@ static void   export_target( PBXTarget *pbxtarget,
 
    if( ! standaloneSuffix)
       return;
-   
+
    sharedName = [name stringByAppendingString:standaloneSuffix];
-   
+
    ctxt2.multipleTargets = YES;
    ctxt2.s_target_name   = [sharedName UTF8String];
    ctxt2.macroName       = makeMacroName( sharedName);
    ctxt2.s_macro_name    = [ctxt2.macroName UTF8String];
 
    print_files_header_comment( sharedName);
-   
+
    printf( "\n"
            "set( %s_SOURCES\n"
            "# add a dummy file here for cmake and the linker to be happy\n"
@@ -1001,21 +969,21 @@ static void   export_target( PBXTarget *pbxtarget,
            ctxt2.s_macro_name);
 
    print_libraries( [NSArray arrayWithObject:name], ctxt2.macroName, YES);
-   
+
    s = generate_library_variablename( multipleTargets ? ctxt.macroName : nil, NO);
    s = [NSString stringWithFormat:@"${%@}", s];
    print_libraries( [NSArray arrayWithObject:s], ctxt2.macroName, NO);
-   
+
    print_target_header_comment( sharedName);
    printcontext_add_library( &ctxt2, 1);
-   
+
    printf( "\n"
           "add_dependencies( %s %s)\n",
           ctxt2.s_target_name,
           ctxt.s_target_name);
-   
+
    printcontext_target_link_libraries( &ctxt2);
-   
+
    printf( "\n"
            "install( TARGETS %s DESTINATION \"lib\")\n",
           ctxt2.s_target_name);
@@ -1031,7 +999,7 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
    NSArray    *projectpaths;
    NSArray    *privatepaths;
    BOOL       shouldPrint;
-   
+
    shouldPrint = (cmd == SourceExport) || ! twoStageCMakeLists;
 
    // collect header dirs as a side product
@@ -1050,13 +1018,13 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
    if( shouldPrint)
       print_paths( publicpaths, name);
-   
+
    name = @"PROJECT_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
    if( shouldPrint)
       print_paths( projectpaths, name);
-   
+
    name = @"PRIVATE_HEADERS";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
@@ -1074,7 +1042,7 @@ static void   export_sources_phase( PBXSourcesBuildPhase *pbxphase,
 
    if( cmd == Export && twoStageCMakeLists)
       return;
-   
+
    name = @"SOURCES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
@@ -1089,10 +1057,10 @@ static void   export_resources_phase( PBXResourcesBuildPhase *pbxphase,
 {
    NSString   *name;
    NSArray    *paths;
-   
+
    if( cmd == Export && twoStageCMakeLists)
       return;
-   
+
    name = @"RESOURCES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
@@ -1109,7 +1077,7 @@ static void   collect_libraries( PBXFrameworksBuildPhase *pbxphase,
    NSString           *path;
    PBXBuildFile       *file;
    PBXFileReference   *reference;
-   
+
    rover = [[pbxphase files] objectEnumerator];
    while( file = [rover nextObject])
    {
@@ -1118,9 +1086,9 @@ static void   collect_libraries( PBXFrameworksBuildPhase *pbxphase,
       path      = [path stringByDeletingPathExtension];
       if( [path hasPrefix:@"lib"])
          path = [path substringFromIndex:3];
-      
+
       libraryName = makeMacroName( path);
-      
+
       if( [[[reference path] pathExtension] isEqualToString:@"a"])
       {
          if( isStatic)
@@ -1139,13 +1107,13 @@ static void   export_frameworks_phase( PBXFrameworksBuildPhase *pbxphase,
 {
    if( cmd == SourceExport)
       return;
-   
+
    collect_libraries( pbxphase, YES);
    collect_libraries( pbxphase, NO);
-   
+
    print_find_library( staticLibraries);
    print_libraries( [staticLibraries allValues], prefix, YES);
-   
+
    print_find_library( sharedLibraries);
    print_libraries( [sharedLibraries allValues], prefix, NO);
 }
@@ -1157,25 +1125,25 @@ static void   export_phase( PBXBuildPhase *pbxphase,
 {
    if( verbose)
       fprintf( stderr, "%s: %s\n", [NSStringFromClass( [pbxphase class]) UTF8String], [[pbxphase name] UTF8String]);
-   
+
    if( [pbxphase isKindOfClass:[PBXHeadersBuildPhase class]])
    {
       export_headers_phase( (PBXHeadersBuildPhase *) pbxphase, cmd, prefix);
       return;
    }
-   
+
    if( [pbxphase isKindOfClass:[PBXSourcesBuildPhase class]])
    {
       export_sources_phase( (PBXSourcesBuildPhase *) pbxphase, cmd, prefix);
       return;
    }
-   
+
    if( [pbxphase isKindOfClass:[PBXResourcesBuildPhase class]])
    {
       export_resources_phase( (PBXResourcesBuildPhase *) pbxphase, cmd, prefix);
       return;
    }
-   
+
    if( [pbxphase isKindOfClass:[PBXFrameworksBuildPhase class]])
    {
       export_frameworks_phase( (PBXFrameworksBuildPhase *) pbxphase, cmd, prefix);
@@ -1189,18 +1157,18 @@ static void   add_implicit_frameworks_if_needed( PBXTarget *pbxtarget)
    BOOL       addFoundation;
    BOOL       addUIKit;
    NSString   *type;
-   
+
    type = [[[pbxtarget productType] componentsSeparatedByString:@".product-type."] lastObject];
-   
+
    addFoundation = suppressFoundation ? NO : YES;
    addUIKit      = suppressUIKit ? NO : YES;
-   
+
    if( [type hasPrefix:@"library"])
    {
       addFoundation = NO;
       addUIKit = NO;
    }
-   
+
    if( addFoundation)
       addSharedLibrariesToFind( @"Foundation", @"FOUNDATION");
    if( addUIKit)
@@ -1214,16 +1182,16 @@ static void   file_exporter( PBXTarget *pbxtarget,
 {
    PBXBuildPhase   *phase;
    NSEnumerator    *rover;
-   
+
    if( verbose)
       fprintf( stderr, "target: %s\n", [[pbxtarget name] UTF8String]);
-   
+
    if( cmd == List)
    {
       printf( "%s\n", [[pbxtarget name] UTF8String]);
       return;
    }
-   
+
    if( cmd == Export)
    {
       printf( "\n# uncomment this for mulle-objc to search libraries first\n"
@@ -1272,7 +1240,7 @@ static void   exporter( PBXProject *root,
          struct tm   *tm;
          NSString    *s;
          NSArray     *arguments;
-         
+
          now = time( NULL);
          tm  = localtime( &now);
 
@@ -1292,20 +1260,22 @@ static void   exporter( PBXProject *root,
    {
       if( ! suppressProject)
       {
-         printf( "project( %s)\n", targets && ! multipleTargets
-            ? [[targetNames lastObject] UTF8String] // tiny bug
-            : [[[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension] UTF8String]);
+         NSString    *name;
          //
          // cross platform wise 3.4 gave me the least trouble
          //
          printf( "\ncmake_minimum_required (VERSION 3.4)\n");
+
+         name = targets && ! multipleTargets
+                 ? [[targetNames lastObject] UTF8String] // tiny bug
+                 : [[[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension] UTF8String];
+         printf( "project( %s%s)\n",
+                     [quotedStringIfNeeded( name) UTF8String],
+                     language == CXX_Language ? "CXX" : "C");
       }
 
-      if( enableMulleConfiguration)
-         print_mulle_configuration();
-      else
-         if( ! suppressBoilerplate)
-            print_boilerplate();
+      if( ! suppressBoilerplate)
+         print_boilerplate();
    }
 
    if( twoStageCMakeLists && cmd == Export)
@@ -1338,7 +1308,7 @@ static void   exporter( PBXProject *root,
               "##\n");
       print_include_directories();
    }
-   
+
    // ugliness ensues...
 
    if( cmd != Export)
@@ -1403,7 +1373,7 @@ static int   _main( int argc, const char * argv[])
          twoStageCMakeLists = YES;
          continue;
       }
-      
+
       if( [s isEqualToString:@"-a"] ||
           [s isEqualToString:@"--always-prefix"])
       {
@@ -1424,7 +1394,7 @@ static int   _main( int argc, const char * argv[])
          dualLibrary = YES;
          continue;
       }
-      
+
       if( [s isEqualToString:@"-f"] ||
           [s isEqualToString:@"--no-foundation"])
       {
@@ -1436,7 +1406,7 @@ static int   _main( int argc, const char * argv[])
       {
          if( ++i >= n)
             usage();
-         
+
          hackPrefix = [arguments objectAtIndex:i];
          continue;
       }
@@ -1453,7 +1423,7 @@ static int   _main( int argc, const char * argv[])
       {
          if( ++i >= n)
             usage();
-         
+
          s = [[arguments objectAtIndex:i] lowercaseString];
          if( [s isEqualToString:@"c"])
             language = C_Language;
@@ -1465,13 +1435,7 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
-      if( [s isEqualToString:@"-m"] ||
-          [s isEqualToString:@"--mulle-configuration"])
-      {
-         enableMulleConfiguration = YES;
-         continue;
-      }
-      
+
       if( [s isEqualToString:@"-n"] ||
           [s isEqualToString:@"--no-message"])
       {
@@ -1499,18 +1463,18 @@ static int   _main( int argc, const char * argv[])
       {
          if( ++i >= n)
             usage();
-         
+
          standaloneSuffix = [arguments objectAtIndex:i];
          continue;
       }
-      
+
       if( [s isEqualToString:@"-t"] ||
           [s isEqualToString:@"-target"] ||
           [s isEqualToString:@"--target"])
       {
          if( ++i >= n)
             usage();
-         
+
          target = [arguments objectAtIndex:i];
          if( ! targetNames)
             targetNames = [NSMutableArray array];
@@ -1530,7 +1494,7 @@ static int   _main( int argc, const char * argv[])
       {
          if( ++i >= n)
             usage();
-         
+
          name = [arguments objectAtIndex:i];
          if( ! heavyStrings)
             heavyStrings = [NSMutableArray array];
