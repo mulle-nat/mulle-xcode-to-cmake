@@ -88,13 +88,21 @@ if(APPLE)
     find_library( FOUNDATION_LIBRARY Foundation)
     message( STATUS "FOUNDATION_LIBRARY is ${FOUNDATION_LIBRARY}")
 else()
+
+	# Without this, execute_process() does not work under GNUstep shell on Windows
+	# =>  	objc_def_flags and objc_def_link_flags are empty 
+	# =>	RESULT_VARIABLE contains "%1 is not a valid win32 app"
+	if(WIN32)
+		set(EXECUTE_PROCESS_PRECOMMAND "sh")
+	endif()
+
     find_program(GNUstepConfig "gnustep-config")
     if(GNUstepConfig)
         message(STATUS "Using GNUstep (${GNUstepConfig})")
-        execute_process(COMMAND "${GNUstepConfig}" "--objc-flags"
+        execute_process(COMMAND ${EXECUTE_PROCESS_PRECOMMAND} "${GNUstepConfig}" "--objc-flags"
             OUTPUT_VARIABLE objc_def_flags
             OUTPUT_STRIP_TRAILING_WHITESPACE)
-        execute_process(COMMAND "${GNUstepConfig}" "--base-libs"
+        execute_process(COMMAND ${EXECUTE_PROCESS_PRECOMMAND} "${GNUstepConfig}" "--base-libs"
             OUTPUT_VARIABLE objc_def_link_flags
             OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(objc_flags      "${objc_def_flags}")
