@@ -165,8 +165,10 @@
 {
    NSString   *key;
    id         value;
-
-   key = NSStringFromSelector( [anInvocation selector]);
+   SEL        sel;
+   
+   sel = [anInvocation selector];
+   key = NSStringFromSelector( sel);
    if( [key hasSuffix:@":"] && [key hasPrefix:@"set"])
    {
       [anInvocation getArgument:&value

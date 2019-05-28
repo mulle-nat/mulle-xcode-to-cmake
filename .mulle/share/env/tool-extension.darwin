@@ -1,0 +1,14 @@
+ar
+as
+cc;optional
+clang;optional
+diff
+gcc;optional
+dsymutil;optional
+install_name_tool
+ld
+nm
+otool
+ranlib
+inotifywait;remove
+fswatch;optional

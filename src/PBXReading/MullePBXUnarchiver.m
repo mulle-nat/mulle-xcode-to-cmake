@@ -168,6 +168,8 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
    id               obj;
    PBXProjectProxy  *proxy;
    
+   NSParameterAssert( [dictionary isKindOfClass:[NSDictionary class]]);
+
    [self init];
    
    archiveVersion_ = [[dictionary objectForKey:@"archiveVersion"] intValue];

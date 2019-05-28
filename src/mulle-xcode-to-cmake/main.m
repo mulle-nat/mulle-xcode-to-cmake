@@ -46,11 +46,12 @@ static void   usage()
            "\t-l <lang>   : specify project language (c,c++,objc) (default: objc)\n"
            "\t-n          : suppress find_library trace\n"
            "\t-p          : suppress project\n"
+           "\t-P <prefix> : prefix filepaths\n"
            "\t-r          : suppress reminder, what generated this file\n"
            "\t-s <suffix> : create standalone test library (framework/shared)\n"
            "\t-t <target> : target to export\n"
            "\t-u          : add UIKIt\n"
-           "\t-w <name>   : add weight to name for sorting"
+           "\t-w <name>   : add weight to name for sorting\n"
            "\n"
            "Commands:\n"
            "\texport      : export CMakeLists.txt to stdout\n"
@@ -89,6 +90,7 @@ enum TargetType
    Framework,
    Tool,
    Application,
+   Aggregate,
    Unknown
 };
 
@@ -119,7 +121,7 @@ static char   head_MacOSXBundleInfo[] =
 "   <key>CFBundleShortVersionString</key>\n"
 "   <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>\n"
 "   <key>CFBundleSignature</key>\n"
-"   <string>????</string>\n"
+"   <string>\?\?\?\?</string>\n"
 "   <key>CFBundleVersion</key>\n"
 "   <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>\n"
 "   <key>NSHumanReadableCopyright</key>\n"
@@ -226,6 +228,7 @@ static NSString   *makeMacroName( NSString *s)
 {
    NSCharacterSet   *set;
 
+   // TODO: make this a global
    set = [[NSCharacterSet alphanumericCharacterSet] invertedSet];
    s   = [[s componentsSeparatedByCharactersInSet:set] componentsJoinedByString:@"_"];
 
@@ -251,10 +254,15 @@ static NSString   *quotedStringIfNeeded( NSString *s)
 {
    NSCharacterSet   *set;
 
-   set = [NSCharacterSet whitespaceCharacterSet];
-   if( [s rangeOfCharacterFromSet:set].length != 0)
-      return( [NSString stringWithFormat:@"\"%@\"", s]);
-   return( s);
+   // TODO: make this a global
+   set = [NSCharacterSet characterSetWithCharactersInString:@" \t$\"!#&'`?<>()[]{}|*~:,;^=\\"];
+   if( [s rangeOfCharacterFromSet:set].length == 0)
+      return( s);
+
+   s = [[s componentsSeparatedByString:@"\\"] componentsJoinedByString:@"\\\\"];
+   s = [[s componentsSeparatedByString:@"\""] componentsJoinedByString:@"\\\""];
+   s = [[s componentsSeparatedByString:@"$"] componentsJoinedByString:@"\\$"];
+   return( [NSString stringWithFormat:@"\"%@\"", s]);
 }
 
 
@@ -291,6 +299,9 @@ static enum TargetType   get_target_type( PBXTarget *pbxtarget)
 {
    NSString   *fullType;
    NSString   *type;
+
+   if( [pbxtarget isKindOfClass:[PBXAggregateTarget class]])
+     return( Aggregate);
 
    fullType = [pbxtarget productType];
    type     = [[fullType componentsSeparatedByString:@".product-type."] lastObject];
@@ -330,29 +341,48 @@ static void  fail( NSString *format, ...)
 static void   print_boilerplate( void)
 {
    printf( "\n"
+          "# ###\n"
+          "# Build for mulle-objc (https://mulle-objc.github.io/):\n"
           "#\n"
-          "# mulle-sde environment\n"
+          "#    mulle-sde init -m foundation/objc-porter executable\n"
+          "#    mulle-sde craft\n"
+          "#\n"
+          "# [mulle-clang >= 8.0.0.0 and mulle-objc >= 0.15 required]\n"
           "#\n"
           "\n"
-          "if( DEPENDENCY_DIR)\n"
-          "  include_directories( BEFORE SYSTEM\n"
-          "${DEPENDENCY_DIR}/include\n"
-          "addiction/include\n"
-          ")\n"
-          "\n"
-          "  set( CMAKE_FRAMEWORK_PATH\n"
-          "${DEPENDENCY_DIR}/Frameworks\n"
-          "${ADDICTION_DIR}/Frameworks\n"
-          "${CMAKE_FRAMEWORK_PATH}\n"
-          ")\n"
-          "\n"
-          "  set( CMAKE_LIBRARY_PATH\n"
-          "${DEPENDENCY_DIR}/lib\n"
-          "${ADDICTION_DIR}/lib\n"
-          "${CMAKE_LIBRARY_PATH}\n"
-          ")\n"
-          "\n"
-          "\n"
+          "if( NOT DEPENDENCY_DIR)\n"
+          "   set( DEPENDENCY_DIR \"${PROJECT_SOURCE_DIR}/dependency\")\n"
+          "endif()\n"
+          "if( EXISTS \"${DEPENDENCY_DIR}\")\n"
+          "   if( NOT ADDICTION_DIR)\n"
+          "      get_filename_component( ADDICTION_DIR \"${DEPENDENCY_DIR}\" DIRECTORY)\n"
+          "      set( ADDICTION_DIR \"${ADDICTION_DIR}/addiction\")\n"
+          "   endif()\n"
+          "   set( CMAKE_FIND_FRAMEWORK \"LAST\")\n"
+          "   include_directories( BEFORE SYSTEM\n"
+          "      ${DEPENDENCY_DIR}/include\n"
+          "      ${ADDICTION_DIR}/include\n"
+          "   )\n"
+          "   set( CMAKE_FRAMEWORK_PATH\n"
+          "      ${DEPENDENCY_DIR}/Frameworks\n"
+          "      ${ADDICTION_DIR}/Frameworks\n"
+          "      ${CMAKE_FRAMEWORK_PATH}\n"
+          "   )\n"
+          "   set( CMAKE_LIBRARY_PATH\n"
+          "      ${DEPENDENCY_DIR}/lib\n"
+          "      ${ADDICTION_DIR}/lib\n"
+          "      ${CMAKE_LIBRARY_PATH}\n"
+          "   )\n"
+          "   execute_process( COMMAND mulle-sde linkorder --output-format cmake --output-omit Foundation\n"
+          "                    WORKING_DIRECTORY \"${PROJECT_SOURCE_DIR}\"\n"
+          "                    OUTPUT_VARIABLE MULLE_SDE_LINKER_FLAGS\n"
+          "                    RESULT_VARIABLE RVAL)\n"
+          "   if( NOT ${RVAL} EQUAL 0)\n"
+          "      message( FATAL_ERROR \"Failed to procure linkorder from mulle-sde. Old version ?\")\n"
+          "   endif()\n"
+          "   message( STATUS \"MULLE_SDE_LINKER_FLAGS=\\\"${MULLE_SDE_LINKER_FLAGS}\\\"\")\n"
+          "else()\n"
+          "   message( STATUS \"Not a mulle-sde build (\\\"${DEPENDENCY_DIR}\\\" does not exist)\")\n"
           "endif()\n"
           "\n");
    printf( "\n"
@@ -372,6 +402,7 @@ static void   print_boilerplate( void)
           "   # endif()\n"
           "\n"
           "   set( CMAKE_POSITION_INDEPENDENT_CODE FALSE)\n"
+          "   set( CMAKE_INSTALL_RPATH \"@rpath/../lib\")\n"
           "\n"
           "   set( BEGIN_ALL_LOAD \"-all_load\")\n"
           "   set( END_ALL_LOAD)\n"
@@ -384,6 +415,7 @@ static void   print_boilerplate( void)
           "   # linux / gcc\n"
           "      set( BEGIN_ALL_LOAD \"-Wl,--whole-archive\")\n"
           "      set( END_ALL_LOAD \"-Wl,--no-whole-archive\")\n"
+          "      set( CMAKE_INSTALL_RPATH \"\\$ORIGIN/../lib\")\n"
           "   endif()\n"
           "endif()\n");
 }
@@ -549,12 +581,12 @@ struct printcontext
 };
 
 
-static void   _print_include_directory_paths( void)
+static void   _print_include_directory_paths( NSArray *directories)
 {
    NSEnumerator   *rover;
    NSString       *path;
 
-   rover = [[[headerDirectories allObjects] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
+   rover = [[directories sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
    while( path = [rover nextObject])
       printf( "%s\n", [quotedPathIfNeeded( path) UTF8String]);
 }
@@ -562,19 +594,31 @@ static void   _print_include_directory_paths( void)
 
 static void   print_include_directories( void)
 {
+   NSArray   *directories;
+
+   directories = [headerDirectories allObjects];
+   if( ! [directories count])
+      return;
+
    printf( "\n" "include_directories( \n");
-   _print_include_directory_paths();
+   _print_include_directory_paths( directories);
    printf( ")\n");
 }
 
 
 static void   printcontext_target_include_directories( struct printcontext *ctxt)
 {
+   NSArray   *directories;
+
+   directories = [headerDirectories allObjects];
+   if( ! [directories count])
+      return;
+
    printf( "\n"
           "target_include_directories( %s\n"
           "   PUBLIC\n",
           ctxt->s_target_name);
-   _print_include_directory_paths();
+   _print_include_directory_paths( directories);
    printf( ")\n");
 }
 
@@ -592,6 +636,7 @@ static void   _printcontext_target_link_libraries( struct printcontext *ctxt,
       "${%s}\n"
       "${END_ALL_LOAD}\n"
       "${%s}\n"
+      "${MULLE_SDE_LINKER_FLAGS}\n"
       ")\n";
    else
       format = "\n"
@@ -830,6 +875,11 @@ static void   printcontext_add_library( struct printcontext *ctxt,
                  "add_library( %s MODULE\n", ctxt->s_target_name);
          break;
 
+      case Tool :
+         printf( "\n"
+                 "add_executable( %s\n", ctxt->s_target_name);
+         break;
+
       default :
          printf( "\n"
                  "add_executable( %s MACOSX_BUNDLE\n", ctxt->s_target_name);
@@ -893,9 +943,9 @@ static void   export_target( PBXTarget *pbxtarget,
    multipleTargets      = alwaysPrefix ? YES : [targets count] >= 2;
    ctxt.pbxtarget       = pbxtarget;
    ctxt.multipleTargets = multipleTargets;
-   ctxt.s_target_name   = [unwhitenedNameIfNeeded( name) UTF8String];
+   ctxt.s_target_name   = (char *) [unwhitenedNameIfNeeded( name) UTF8String];
    ctxt.macroName       = makeMacroName( name);
-   ctxt.s_macro_name    = [ctxt.macroName UTF8String];
+   ctxt.s_macro_name    = (char *) [ctxt.macroName UTF8String];
    ctxt.targetType      = get_target_type( pbxtarget);
 
    if( verbose)
@@ -930,7 +980,7 @@ static void   export_target( PBXTarget *pbxtarget,
       sharedName = [name stringByAppendingString:@"_shared"];
 
       ctxt3.targetType    = SharedLibrary;
-      ctxt3.s_target_name = [sharedName UTF8String];
+      ctxt3.s_target_name = (char *) [sharedName UTF8String];
 
 
       // emit another add_library for shared
@@ -956,9 +1006,9 @@ static void   export_target( PBXTarget *pbxtarget,
    sharedName = [name stringByAppendingString:standaloneSuffix];
 
    ctxt2.multipleTargets = YES;
-   ctxt2.s_target_name   = [sharedName UTF8String];
+   ctxt2.s_target_name   = (char *) [sharedName UTF8String];
    ctxt2.macroName       = makeMacroName( sharedName);
-   ctxt2.s_macro_name    = [ctxt2.macroName UTF8String];
+   ctxt2.s_macro_name    = (char *) [ctxt2.macroName UTF8String];
 
    print_files_header_comment( sharedName);
 
@@ -1266,12 +1316,12 @@ static void   exporter( PBXProject *root,
          //
          printf( "\ncmake_minimum_required (VERSION 3.4)\n");
 
-         name = targets && ! multipleTargets
-                 ? [[targetNames lastObject] UTF8String] // tiny bug
-                 : [[[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension] UTF8String];
+         name = [targets count] && ! multipleTargets
+                 ? [[targets lastObject] name]
+                 : [[[file stringByDeletingLastPathComponent] lastPathComponent] stringByDeletingPathExtension];
          printf( "project( %s%s)\n",
                      [quotedStringIfNeeded( name) UTF8String],
-                     language == CXX_Language ? "CXX" : "C");
+                     language == CXX_Language ? " CXX" : " C");
       }
 
       if( ! suppressBoilerplate)
@@ -1297,7 +1347,8 @@ static void   exporter( PBXProject *root,
    {
       if( (cmd == Export && ! twoStageCMakeLists) || cmd == SourceExport)
          print_files_header_comment( [pbxtarget name]);
-      file_exporter( pbxtarget, cmd, multipleTargets);
+      if( ! [pbxtarget isKindOfClass:[PBXAggregateTarget class]])
+         file_exporter( pbxtarget, cmd, multipleTargets);
    }
 
    if( printGlobalIncludes)
@@ -1389,7 +1440,7 @@ static int   _main( int argc, const char * argv[])
       }
 
       if( [s isEqualToString:@"-d"] ||
-         [s isEqualToString:@"--dual"])
+          [s isEqualToString:@"--dual"])
       {
          dualLibrary = YES;
          continue;
@@ -1402,7 +1453,8 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
-      if( [s isEqualToString:@"--hack-paths"])
+      if( [s isEqualToString:@"-P"] ||
+          [s isEqualToString:@"--hack-paths"])
       {
          if( ++i >= n)
             usage();
@@ -1457,7 +1509,6 @@ static int   _main( int argc, const char * argv[])
          continue;
       }
 
-
       if( [s isEqualToString:@"-s"] ||
           [s isEqualToString:@"--standalone"])
       {
@@ -1506,20 +1557,27 @@ static int   _main( int argc, const char * argv[])
       if( ! targetNames)
          targetNames = all_target_names( root);
 
+
       if( [s isEqualToString:@"export"])
       {
+         if( i != n - 1)
+            NSLog( @"Garbage after command \"%@\"", s);
          exporter( root, Export, targetNames, file);
          break;
       }
 
       if( [s isEqualToString:@"sexport"])
       {
+         if( i != n - 1)
+            NSLog( @"Garbage after command \"%@\"", s);
          exporter( root, SourceExport, targetNames, file);
          break;
       }
 
       if( [s isEqualToString:@"list"])
       {
+         if( i != n - 1)
+            NSLog( @"Garbage after command \"%@\"", s);
          exporter( root, List, targetNames, file);
          break;
       }

@@ -1,0 +1,13 @@
+mulle-clang
+mulle-lldb;optional
+cmake;optional
+mulle-cmake-graphviz-include;optional
+mulle-create-build-motd;optional
+git;optional
+gzip;optional
+id;optional
+inotifywait;optional
+ssh;optional
+tar;optional
+tty;optional
+zip;optional

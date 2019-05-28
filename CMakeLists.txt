@@ -2,43 +2,60 @@
 # Command line:
 #    mulle-xcode-to-cmake -2 export mulle-xcode-to-cmake.xcodeproj
 
-project( mulle-xcode-to-cmake)
+project( mulle-xcode-to-cmake C)
 
 cmake_minimum_required (VERSION 3.4)
 
-#
-# mulle-bootstrap environment
-#
 
-# check if compiling with mulle-bootstrap (works since 2.6)
+# check if compiling with mulle-sde
 
-if( NOT MULLE_BOOTSTRAP_VERSION)
-  include_directories( BEFORE SYSTEM
-dependencies/include
-addictions/include
-)
-
-  set( CMAKE_FRAMEWORK_PATH
-dependencies/Frameworks
-addictions/Frameworks
-${CMAKE_FRAMEWORK_PATH}
-)
-
-  set( CMAKE_LIBRARY_PATH
-dependencies/lib
-addictions/lib
-${CMAKE_LIBRARY_PATH}
-)
-
-set( DEPENDENCIES_DIR dependencies)
-set( ADDICTIONS_DIR addictions)
-
+if( NOT DEPENDENCY_DIR)
+   set( DEPENDENCY_DIR "${PROJECT_SOURCE_DIR}/dependency")
 endif()
 
+if( EXISTS "${DEPENDENCY_DIR}")
+   if( NOT ADDICTION_DIR)
+      set( ADDICTION_DIR "${PROJECT_SOURCE_DIR}/addiction")
+   endif()
+
+   set( CMAKE_FIND_FRAMEWORK "LAST")
+
+   include_directories( BEFORE SYSTEM
+   ${DEPENDENCY_DIR}/include
+   ${ADDICTION_DIR}/include
+   )
+
+   set( CMAKE_FRAMEWORK_PATH
+   ${DEPENDENCY_DIR}/Frameworks
+   ${ADDICTION_DIR}/Frameworks
+   ${CMAKE_FRAMEWORK_PATH}
+   )
+
+   set( CMAKE_LIBRARY_PATH
+   ${DEPENDENCY_DIR}/lib
+   ${ADDICTION_DIR}/lib
+   ${CMAKE_LIBRARY_PATH}
+   )
+
+   execute_process( COMMAND mulle-sde linkorder --output-format cmake --output-omit Foundation
+                    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+                    OUTPUT_VARIABLE MULLE_SDE_LINKER_FLAGS
+                    RESULT_VARIABLE RVAL)
+   if( NOT ${RVAL} EQUAL 0)
+      message( FATAL_ERROR "Failed to procure linkorder from mulle-sde. Old version ?")
+   endif()
+
+   message( STATUS "MULLE_SDE_LINKER_FLAGS=\"${MULLE_SDE_LINKER_FLAGS}\"")
+
+else()
+   message( STATUS "Not a mulle-sde build (\"${DEPENDENCY_DIR}\" does not exist)")
+endif()
 
 #
 # Platform specific definitions
 #
+option( GNUSTEP "Use GNUstep instead of mulle-objc" OFF)
+
 
 if( APPLE)
    # # CMAKE_OSX_SYSROOT must be set for CMAKE_OSX_DEPLOYMENT_TARGET (cmake bug)
@@ -84,7 +101,7 @@ set( MULLE_XCODE_TO_CMAKE_STATIC_DEPENDENCIES
 ${MULLEPBX_LIBRARY}
 )
 
-if(APPLE)
+if( NOT GNUSTEP)
     find_library( FOUNDATION_LIBRARY Foundation)
     message( STATUS "FOUNDATION_LIBRARY is ${FOUNDATION_LIBRARY}")
 else()
@@ -145,14 +162,20 @@ ${MULLE_XCODE_TO_CMAKE_STATIC_DEPENDENCIES}
 ${END_ALL_LOAD}
 ${MULLE_XCODE_TO_CMAKE_DEPENDENCIES}
 )
-if(GNUstepConfig)
-    set_target_properties( mulle-xcode-to-cmake PROPERTIES
-        LANGUAGE C COMPILE_FLAGS "${objc_flags}"
-        LINK_FLAGS "${objc_link_flags}")
-elseif(NOT APPLE)
-	target_link_libraries( mulle-xcode-to-cmake ${OBJC_LIBRARY})
-endif()
 
+target_link_libraries( mulle-xcode-to-cmake
+${MULLE_SDE_LINKER_FLAGS}
+)
+
+if( GNUSTEP)
+   if( GNUstepConfig)
+       set_target_properties( mulle-xcode-to-cmake PROPERTIES
+           LANGUAGE C COMPILE_FLAGS "${objc_flags}"
+           LINK_FLAGS "${objc_link_flags}")
+   else()
+	   target_link_libraries( mulle-xcode-to-cmake ${OBJC_LIBRARY})
+   endif()
+endif()
 
 ##
 ## mullepbx
@@ -171,10 +194,13 @@ target_include_directories( mullepbx
       src/PBXReading
       src/PBXWriting
 )
-if(GNUstepConfig)
-    set_target_properties( mullepbx PROPERTIES
-        LANGUAGE C COMPILE_FLAGS "${objc_flags}"
-        LINK_FLAGS "${objc_link_flags}")
+
+if( GNUSTEP)
+   if(GNUstepConfig)
+       set_target_properties( mullepbx PROPERTIES
+           LANGUAGE C COMPILE_FLAGS "${objc_flags}"
+           LINK_FLAGS "${objc_link_flags}")
+   endif()
 endif()
 
 install( TARGETS mullepbx DESTINATION "lib")
