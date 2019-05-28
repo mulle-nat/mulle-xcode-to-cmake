@@ -1,3 +1,13 @@
+## 0.8.0
+
+* add a couple of suggestions and fix ideas by @saxbophone
+* change boilerplate to support mulle-objc legacy style development
+* added GNUSTEp code by @RJVB and @ElMostafaIdrassi
+* boilerplate code migrated off mulle-bootstrap unto mulle-sde
+* migrated project to mulle-sde
+* remove mulle-configuration code since it is obsolete
+
+
 ### 0.7.1
 
 * Modernized mulle-project packaging
