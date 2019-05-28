@@ -45,6 +45,8 @@ platforms it is suggested to install a recent clang version (5 or later) and you
 will need libobjc and the gnustep-base developer package, both from GNUstep (or another
 implementation of the ObjC runtime and the Foundation library).
 
+On Windows, it is a bit tricky : please refer to this little guide [here](https://github.com/ElMostafaIdrassi/mulle-xcode-to-cmake/blob/release/BUILD-GNUSTEP-WINDOWS.md)
+
 
 ## Usage
 
@@ -58,10 +60,10 @@ Options:
    -d          : create static and shared library
    -f          : suppress Foundation (implicitly added)
    -i          : print global include_directories
-   -l <lang>   : specify language (c,c++,objc) for mulle-configuration (default: objc)
-   -m          : include mulle-configuration (affects boilerplate)
+   -l <lang>   : specify project language (c,c++,objc) (default: objc)
    -n          : suppress find_library trace
    -p          : suppress project
+   -P <prefix> : prefix filepaths
    -r          : suppress reminder, what generated this file
    -s <suffix> : create standalone test library (framework/shared)
    -t <target> : target to export
@@ -262,3 +264,11 @@ See the [RELEASENOTES.md](RELEASENOTES.md) for what has changed.
 ### Author
 
 Coded by Nat!
+
+
+### Contributors
+
+* [@RJVB](https://github.com/RJVB) GNUstep
+* [@ElMostafaIdrassi](https://github.com/ElMostafaIdrassi) GNUstep WIN
+* [@saxbophone](https://github.com/saxbophone) Bugreports
+
