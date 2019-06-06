@@ -72,6 +72,15 @@
 }
 
 
+- (BOOL) isSourceRoot
+{
+   NSString   *tree;
+   
+   tree = [self sourceTree];
+   return( [tree isEqualToString:@"SOURCE_ROOT"]);
+}
+
+
 - (BOOL) isGroupRelative
 {
    NSString   *tree;
@@ -226,7 +235,7 @@
    NSString   *path;
    PBXGroup   *dad;
    
-   if( ! [self isGroupRelative])
+   if( ! [self isGroupRelative] && ! [self isSourceRoot])
       return( nil);
 
    dad  = [self parentGroup];

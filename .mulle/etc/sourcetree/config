@@ -1,2 +1,2 @@
-Foundation;tar;;70DEE2C1-F25E-422F-8C9A-4F16409162AD;Foundation;${FOUNDATION_BRANCH:-latest};;;
+Foundation;${FOUNDATION_NODETYPE:-tar};;a5ea764d-4f44-4e76-a6de-12b7ee5310b8;${FOUNDATION_URL:-https://github.com/MulleFoundation/Foundation/archive/${MULLE_BRANCH}.tar.gz};${FOUNDATION_BRANCH:-latest};;;
 Foundation-startup;none;no-all-load,no-build,no-cmakeinherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-startup;0F1D646D-A356-4CA6-9134-8B66DFD116D8;;;;;

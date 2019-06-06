@@ -1,3 +1,9 @@
+### 0.8.1
+
+* fix mulle-sde project
+* update README install instructions
+* fix incorrect group relative paths
+
 ## 0.8.0
 
 * add a couple of suggestions and fix ideas by @saxbophone
