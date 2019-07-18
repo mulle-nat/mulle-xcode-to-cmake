@@ -232,9 +232,8 @@ static NSString   *makeMacroName( NSString *s)
    set = [[NSCharacterSet alphanumericCharacterSet] invertedSet];
    s   = [[s componentsSeparatedByCharactersInSet:set] componentsJoinedByString:@"_"];
 
-   s   = [NSString externalNameForInternalName:s
-                                 separatorString:@"_"
-                                      useAllCaps:YES];
+   s   = [s makeExternalNameFromInternalNameWithSeparatorString:@"_"
+                                                     useAllCaps:YES];
    return( [s uppercaseString]);
 }
 
@@ -351,6 +350,9 @@ static void   print_boilerplate( void)
           "#\n"
           "\n"
           "if( NOT DEPENDENCY_DIR)\n"
+          "   set( DEPENDENCY_DIR \"$ENV{DEPENDENCY_DIR}\")\n"
+          "endif()\n"
+          "if( NOT DEPENDENCY_DIR)\n"
           "   set( DEPENDENCY_DIR \"${PROJECT_SOURCE_DIR}/dependency\")\n"
           "endif()\n"
           "if( EXISTS \"${DEPENDENCY_DIR}\")\n"
@@ -373,7 +375,11 @@ static void   print_boilerplate( void)
           "      ${ADDICTION_DIR}/lib\n"
           "      ${CMAKE_LIBRARY_PATH}\n"
           "   )\n"
-          "   execute_process( COMMAND mulle-sde linkorder --output-format cmake --output-omit Foundation\n"
+          "   set( SKIP_FIND_FOUNDATION_LIBRARY ON)\n"
+          "   execute_process( COMMAND mulle-sde stash-dir\n"
+          "                    OUTPUT_VARIABLE MULLE_SOURCETREE_STASH_DIR)\n"
+          "   string( STRIP \"${MULLE_SOURCETREE_STASH_DIR}\" MULLE_SOURCETREE_STASH_DIR)\n"
+          "   execute_process( COMMAND mulle-sde linkorder --stash-dir \"${MULLE_SOURCETREE_STASH_DIR}\" --startup --simplify --output-format cmake\n"
           "                    WORKING_DIRECTORY \"${PROJECT_SOURCE_DIR}\"\n"
           "                    OUTPUT_VARIABLE MULLE_SDE_LINKER_FLAGS\n"
           "                    RESULT_VARIABLE RVAL)\n"
@@ -459,14 +465,41 @@ static void   print_paths( NSArray *paths,
 }
 
 
+static NSString   *reference_get_path( PBXFileReference *reference, BOOL isHeader)
+{
+   NSString   *path;
+   NSString   *dir;
+
+   if( [reference isGroupRelative])
+      path = [reference sourceTreeRelativeFilesystemPath];
+   else
+      path = [reference path];
+
+   if( ! path)
+      path = [reference displayName]; // hack (should be path)
+   else
+      if( isHeader)
+      {
+         dir = [path stringByDeletingLastPathComponent];
+         if( ! [dir length])
+            dir = @".";  // needed when subdir does include
+         addHeaderDirectory( dir);
+      }
+
+   return( path);
+}
+
+
 static NSArray   *collect_paths( NSArray *files, BOOL isHeader)
 {
    NSEnumerator       *rover;
+   NSEnumerator       *enumerator;
    NSMutableArray     *paths;
-   NSString           *dir;
    NSString           *path;
    PBXBuildFile       *file;
-   PBXFileReference   *reference;
+   id                 reference;
+   NSArray            *children;
+   NSArray            *result;
 
    paths = [NSMutableArray array];
 
@@ -474,23 +507,21 @@ static NSArray   *collect_paths( NSArray *files, BOOL isHeader)
    while( file = [rover nextObject])
    {
       reference = [file fileRef];
-      if( [reference isGroupRelative])
-         path = [reference sourceTreeRelativeFilesystemPath];
-      else
-         path = [reference path];
-
-      if( ! path)
-         path = [reference displayName]; // hack (should be path)
-      else
-         if( isHeader)
+      if( [reference isKindOfClass:[PBXVariantGroup class]])
+      {
+         children   = [(PBXVariantGroup *) reference children];
+         enumerator = [children objectEnumerator];
+         while( reference = [enumerator nextObject])
          {
-            dir = [path stringByDeletingLastPathComponent];
-            if( ! [dir length])
-               dir = @".";  // needed when subdir does include
-            addHeaderDirectory( dir);
+            path = reference_get_path( reference, isHeader);
+            [paths addObject:path];
          }
-
-      [paths addObject:path];
+      }
+      else
+      {
+         path = reference_get_path( reference, isHeader);
+         [paths addObject:path];
+      }
    }
    return( paths);
 }
@@ -546,11 +577,13 @@ static void   print_find_library( NSDictionary *libraries)
    while( key = [rover nextObject])
    {
       library = [libraries objectForKey:key];
-      printf( "find_library( %s_LIBRARY %s)\n",
+      printf( "if( NOT SKIP_FIND_%s_LIBRARY)\n", [library UTF8String]);
+      printf( "   find_library( %s_LIBRARY %s)\n",
                [library UTF8String], [key UTF8String]);
       if( ! suppressTrace)
-         printf( "message( STATUS \"%s_LIBRARY is ${%s_LIBRARY}\")\n",
+         printf( "   message( STATUS \"%s_LIBRARY is ${%s_LIBRARY}\")\n",
                 [library UTF8String], [library UTF8String]);
+      printf( "endif()\n");
    }
 }
 
@@ -779,7 +812,8 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 "   install( TARGETS %s DESTINATION \"Frameworks\")\n"
                 "else()\n"
                 "   install( TARGETS %s DESTINATION \"lib\" )\n"
-                "   install( FILES ${PUBLIC_HEADERS} DESTINATION \"include/%s\")\n"
+                "   install( FILES ${%s} DESTINATION \"include/%s\")\n"
+                "   install( FILES ${%s} DESTINATION \"share/%s\")\n"
                 "endif()\n"
                 "\n",
                 ctxt->s_target_name,
@@ -789,7 +823,11 @@ static void   printcontext_target_properties( struct printcontext *ctxt)
                 [resourcesName UTF8String],
                 ctxt->s_target_name,
                 ctxt->s_target_name,
-                ctxt->s_target_name);
+                [headersName UTF8String],
+                ctxt->s_target_name,
+                [resourcesName UTF8String],
+                ctxt->s_target_name
+         );
          break;
 
       case Bundle        :
@@ -1084,8 +1122,8 @@ static void   export_headers_phase( PBXHeadersBuildPhase *pbxphase,
 
 
 static void   export_sources_phase( PBXSourcesBuildPhase *pbxphase,
-                                   enum Command cmd,
-                                   NSString *prefix)
+                                    enum Command cmd,
+                                    NSString *prefix)
 {
    NSString   *name;
    NSArray    *paths;
@@ -1101,26 +1139,119 @@ static void   export_sources_phase( PBXSourcesBuildPhase *pbxphase,
 }
 
 
+static NSString  *languageNameFromPath( NSString *path)
+{
+   NSArray        *components;
+   NSEnumerator   *rover;
+   NSString       *component;
+
+   components = [path pathComponents];
+   rover      = [components objectEnumerator];
+   while( component = [rover nextObject])
+      if( [[component pathExtension] isEqualToString:@"lproj"])
+         return( [component stringByDeletingPathExtension]);
+   return( nil);
+}
+
+
+static NSDictionary  *resource_paths_by_language( NSArray *paths)
+{
+   NSEnumerator          *rover;
+   NSString              *path;
+   NSMutableDictionary   *table;
+   NSMutableArray        *pathArray;
+   NSString              *languageName;
+
+   table = [NSMutableDictionary dictionary];
+
+   rover = [[paths sortedArrayUsingSelector:@selector( xcodeWeightedCompare:)] objectEnumerator];
+   while( path = [rover nextObject])
+   {
+      languageName = languageNameFromPath( path);
+      if( ! languageName)
+         languageName = @"00_Global";
+      pathArray = [table objectForKey:languageName];
+      if( ! pathArray)
+      {
+         pathArray = [NSMutableArray array];
+         [table setObject:pathArray
+                   forKey:languageName];
+      }
+      [pathArray addObject:path];
+   }
+
+   return( table);
+}
+
+
+static void   print_names( NSArray *names,
+                           NSString *name)
+{
+   NSEnumerator   *rover;
+   NSString       *s;
+
+   printf( "\n"
+          "set( %s\n", [name UTF8String]);
+
+   rover = [names objectEnumerator];
+   while( s = [rover nextObject])
+      printf( "   ${%s}\n", [s UTF8String]);
+   printf( ")\n");
+}
+
+
+
 static void   export_resources_phase( PBXResourcesBuildPhase *pbxphase,
                                       enum Command cmd,
                                       NSString *prefix)
 {
-   NSString   *name;
-   NSArray    *paths;
+   NSEnumerator    *rover;
+   NSString        *name;
+   NSString        *identifier;
+   NSString        *languageName;
+   NSArray         *paths;
+   NSMutableArray  *names;
+   NSDictionary    *table;
 
    if( cmd == Export && twoStageCMakeLists)
       return;
 
+   names = [NSMutableArray array];
+
+   //
+   // We output resources a little smarter, grouped by locale now.
+   // But "that's all folks" for now..
+   //
+   paths = collect_paths( [pbxphase files], NO);
+
+   table = resource_paths_by_language( paths);
+   rover = [[[table allKeys] sortedArrayUsingSelector:@selector( compare:)] objectEnumerator];
+   while( languageName = [rover nextObject])
+   {
+      paths = [table objectForKey:languageName];
+      if( [languageName hasPrefix:@"00_"])
+         languageName = [languageName substringFromIndex:3];
+      identifier = [languageName uppercaseString];
+
+      name = @"RESOURCES";
+      if( [prefix length])
+         name = [NSString stringWithFormat:@"%@_%@_%@", prefix, identifier, name];
+      else
+         name = [NSString stringWithFormat:@"%@_%@", identifier, name];
+      [names addObject:name];
+      print_paths( paths, name);
+   }
+
    name = @"RESOURCES";
    if( [prefix length])
       name = [NSString stringWithFormat:@"%@_%@", prefix, name];
-   paths = collect_paths( [pbxphase files], NO);
-   print_paths( paths, name);
+
+   print_names( names, name);
 }
 
 
 static void   collect_libraries( PBXFrameworksBuildPhase *pbxphase,
-                                BOOL isStatic)
+                                 BOOL isStatic)
 {
    NSEnumerator       *rover;
    NSString           *libraryName;
@@ -1227,8 +1358,8 @@ static void   add_implicit_frameworks_if_needed( PBXTarget *pbxtarget)
 
 
 static void   file_exporter( PBXTarget *pbxtarget,
-                            enum Command cmd,
-                            BOOL multipleTargets)
+                             enum Command cmd,
+                             BOOL multipleTargets)
 {
    PBXBuildPhase   *phase;
    NSEnumerator    *rover;

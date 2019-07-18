@@ -37,7 +37,7 @@ installed and then build **mulle-xcode-to-cmake** with:
 
 ```
 mulle-sde clean cache
-mulle-sde craft
+mulle-sde craft --release
 mulle-sde run mulle-make install --prefix /usr/local/bin
 ```
 

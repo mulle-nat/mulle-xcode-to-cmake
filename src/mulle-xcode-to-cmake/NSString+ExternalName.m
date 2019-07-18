@@ -10,16 +10,17 @@
 
 @implementation NSString (ExternalName)
 
-+ (NSString *) externalNameForInternalName:(NSString *) s
-                           separatorString:(NSString *) sep
-                                useAllCaps:(BOOL) allCaps
+- (NSString *) makeExternalNameFromInternalNameWithSeparatorString:(NSString *) sep
+                                                        useAllCaps:(BOOL) allCaps
 {
-   NSRange          range;
    NSCharacterSet   *set;
-   NSUInteger     len;
-   NSString         *sub;
    NSMutableString  *result;
+   NSRange          range;
+   NSString         *s;
+   NSString         *sub;
+   NSUInteger       len;
 
+   s = self;
    if( [s rangeOfString:@"MulleObjC"].length)
       s = [[s componentsSeparatedByString:@"MulleObjC"] componentsJoinedByString:@"MulleObjc"];
    if( [s rangeOfString:@"BSDFoundation"].length)

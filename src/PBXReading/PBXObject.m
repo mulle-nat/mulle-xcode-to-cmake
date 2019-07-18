@@ -324,19 +324,6 @@
 
 
 @implementation PBXVariantGroup
-
-// hacks for Makefile production removed (so something will be broken there)
-//- (NSString *) sourceTreeRelativeFilesystemPath(PBXGroup *) group
-//{
-//   return( [[[self children] mulleFirstObject] relativeFilesystemPathgroup]);
-//}
-//
-//
-//- (NSString *) absolutePathToRootGroup:(PBXGroup *) group
-//{
-//   return( [[[self children] mulleFirstObject] absolutePathToRootGroup:group]);
-//}
-
 @end
 
 

@@ -1,11 +1,11 @@
 /*
    mulle-xcode-to-cmake
-   
+
    $Id: MullePBXUnarchiver.m,v 888dcac8ab3c 2011/10/11 08:32:04 nat $
 
    Created by Nat! on 26.12.10.
    Copyright 2010 Mulle kybernetiK
-   
+
    This file is part of mulle-xcode-to-cmake.
 
    mulle-xcode-to-cmake is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ static NSDictionary   *_openDictionary( NSString *path, NSPropertyListFormat *fo
                                               ];
    if( ! data)
       return( nil);
-   
+
    return( [NSPropertyListSerialization propertyListWithData:data
                                                      options:0
                                                       format:format
@@ -53,15 +53,17 @@ static NSDictionary   *_openDictionary( NSString *path, NSPropertyListFormat *fo
 }
 
 
-static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *format, NSError **error)
+static NSDictionary   *openDictionary( NSString **path,
+                                       NSPropertyListFormat *format,
+                                       NSError **error)
 {
    NSDictionary   *dict;
    NSString       *subpath;
-   
+
    dict = _openDictionary( *path, format, error);
    if( dict || [*path hasSuffix:@"pbxproj"])
       return( dict);
-   
+
    subpath = [*path stringByAppendingPathComponent:@"project.pbxproj"];
    dict = _openDictionary( *path, format, error);
    if( dict)
@@ -86,12 +88,12 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
                                  class:(Class) superClass
 {
    Class   subclass;
-   
+
    subclass = objc_allocateClassPair( superClass, [name UTF8String], 0);
    if( ! subclass)
       [NSException raise:NSInternalInconsistencyException
                   format:@"Couldn't create class for %@", name];
-   
+
    objc_registerClassPair( subclass);
 #if !defined(DEBUG) && defined(__APPLE__)
    if( NSDebugEnabled)
@@ -114,10 +116,10 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
    Class                 aClass;
    Class                 superClass;
    id                    obj;
-   
+
    objectStorage_ = [NSMutableDictionary new];
    reverseLookup_ = NSCreateMapTable( NSNonOwnedPointerMapKeyCallBacks,
-                                      NSObjectMapValueCallBacks, 
+                                      NSObjectMapValueCallBacks,
                                       128);
    //
    // first create all objects
@@ -128,7 +130,7 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
       info      = [dictionary objectForKey:key];
       className = [info objectForKey:@"isa"];
       aClass    = NSClassFromString( className);
-      
+
       // just ignore stuff, that has no PBX prefix
       if( ! [className hasPrefix:@"PBX"] && ! [className hasPrefix:@"XC"])
       {
@@ -144,17 +146,17 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
          else
             if( [className hasSuffix:@"Target"])
                superClass = [PBXTarget class];
-         
+
          aClass = [self dynamicallySubclassPBXObject:className
                                                class:superClass];
       }
-      
+
       obj = [aClass alloc];   // assume based on NSObject, so it's OK
       [obj setCodecKey:key];
       [objectStorage_ setObject:obj
                          forKey:key];
       [obj release];
-      
+
       NSMapInsert( reverseLookup_, obj, key);
    }
 }
@@ -167,11 +169,11 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
    NSString         *key;
    id               obj;
    PBXProjectProxy  *proxy;
-   
+
    NSParameterAssert( [dictionary isKindOfClass:[NSDictionary class]]);
 
    [self init];
-   
+
    archiveVersion_ = [[dictionary objectForKey:@"archiveVersion"] intValue];
    if( archiveVersion_ > 1)
       NSLog( @"later archive version format");
@@ -180,11 +182,11 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
       NSLog( @"later object version format");
 
    proxy = [[PBXProjectProxy alloc] init];  // leaks (but so what)
-   
+
    infos = [dictionary objectForKey:@"objects"];
    [self createObjectStorageWithDictionary:infos];
    infoStorage_ = [[infos decodeWithObjectStorage:objectStorage_] retain];
-   
+
    rover = [objectStorage_ keyEnumerator];
    while( key = [rover nextObject])
    {
@@ -196,7 +198,7 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
    rootKey_ = [[dictionary objectForKey:@"rootObject"] retain];
    obj      = [objectStorage_ objectForKey:rootKey_];
    [proxy setProject:obj];
-   
+
    return( self);
 }
 
@@ -204,7 +206,7 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
 - (id) decodeRootObject
 {
    id   root;
-   
+
    root = [objectStorage_ objectForKey:rootKey_];
    return( root);
 }
@@ -213,7 +215,7 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
 - (NSDictionary *) infoForObject:(id) obj
 {
    NSString  *key;
-   
+
    key = NSMapGet( reverseLookup_, obj);
    if( ! key)
       return( nil);
@@ -228,7 +230,7 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
    [infoStorage_ release];
    if( reverseLookup_)
       NSFreeMapTable( reverseLookup_);
-   
+
    [super dealloc];
 }
 
@@ -241,22 +243,22 @@ static NSDictionary   *openDictionary( NSString **path, NSPropertyListFormat *fo
    NSString               *dir;
    NSPropertyListFormat   format;
    NSError                *error;
-   
+
    dict = openDictionary( path, &format, &error);
    if( ! dict)
       return( nil);
-   
+
    decoder = [[[self alloc] initWithDictionary:dict] autorelease];
    project = [decoder decodeRootObject];
    [[project rootGroup] setProject:project];
-   
+
    // get main directory (relative possibly)
    dir = [[*path stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
    if( ! [dir length])
       dir = @".";
 
    [project setPath:dir];
-   
+
    return( project);
 }
 

@@ -10,8 +10,6 @@
 
 @interface NSString (ExternalName)
 
-+ (NSString *) externalNameForInternalName:(NSString *) s
-                           separatorString:(NSString *) sep    
-                                useAllCaps:(BOOL) allCaps;
-
+- (NSString *) makeExternalNameFromInternalNameWithSeparatorString:(NSString *) sep
+                                                        useAllCaps:(BOOL) allCaps;
 @end

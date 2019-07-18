@@ -9,6 +9,8 @@ cmake_minimum_required (VERSION 3.4)
 
 # check if compiling with mulle-sde
 
+set( FIND_FOUNDATION_LIBRARY ON) # default
+
 if( NOT DEPENDENCY_DIR)
    set( DEPENDENCY_DIR "${PROJECT_SOURCE_DIR}/dependency")
 endif()
@@ -37,16 +39,27 @@ if( EXISTS "${DEPENDENCY_DIR}")
    ${CMAKE_LIBRARY_PATH}
    )
 
-   execute_process( COMMAND mulle-sde linkorder --output-format cmake --output-omit Foundation
-                    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+
+   set( FIND_FOUNDATION_LIBRARY OFF) # default
+
+   execute_process( COMMAND mulle-sde stash-dir
+                    OUTPUT_VARIABLE MULLE_SOURCETREE_STASH_DIR)
+   string( STRIP "${MULLE_SOURCETREE_STASH_DIR}" MULLE_SOURCETREE_STASH_DIR)
+
+
+   execute_process( COMMAND mulle-sde linkorder --stash-dir "${MULLE_SOURCETREE_STASH_DIR}" --startup --simplify --output-format cmake
                     OUTPUT_VARIABLE MULLE_SDE_LINKER_FLAGS
+                    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
                     RESULT_VARIABLE RVAL)
    if( NOT ${RVAL} EQUAL 0)
       message( FATAL_ERROR "Failed to procure linkorder from mulle-sde. Old version ?")
    endif()
 
    message( STATUS "MULLE_SDE_LINKER_FLAGS=\"${MULLE_SDE_LINKER_FLAGS}\"")
-
+   set( MULLE_SDE_LINKER_FLAGS
+        ${MULLE_SDE_LINKER_FLAGS}
+        CACHE INTERNAL "cache this for posterity"
+   )
 else()
    message( STATUS "Not a mulle-sde build (\"${DEPENDENCY_DIR}\" does not exist)")
 endif()
@@ -55,7 +68,9 @@ endif()
 # Platform specific definitions
 #
 option( GNUSTEP "Use GNUstep instead of mulle-objc" OFF)
-
+if( GNUSTEP)
+   set( FIND_FOUNDATION_LIBRARY OFF) # default
+endif()
 
 if( APPLE)
    # # CMAKE_OSX_SYSROOT must be set for CMAKE_OSX_DEPLOYMENT_TARGET (cmake bug)
@@ -101,13 +116,14 @@ set( MULLE_XCODE_TO_CMAKE_STATIC_DEPENDENCIES
 ${MULLEPBX_LIBRARY}
 )
 
-if( NOT GNUSTEP)
-    find_library( FOUNDATION_LIBRARY Foundation)
-    message( STATUS "FOUNDATION_LIBRARY is ${FOUNDATION_LIBRARY}")
-else()
+if( FIND_FOUNDATION_LIBRARY)
+   find_library( FOUNDATION_LIBRARY Foundation)
+   message( STATUS "FOUNDATION_LIBRARY is ${FOUNDATION_LIBRARY}")
+endif()
 
+if( GNUSTEP)
 	# Without this, execute_process() does not work under GNUstep shell on Windows
-	# =>  	objc_def_flags and objc_def_link_flags are empty 
+	# =>  	objc_def_flags and objc_def_link_flags are empty
 	# =>	RESULT_VARIABLE contains "%1 is not a valid win32 app"
 	if(WIN32)
 		set(EXECUTE_PROCESS_PRECOMMAND "sh")

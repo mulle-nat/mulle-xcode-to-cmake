@@ -1,2 +1,2 @@
-Foundation;${FOUNDATION_NODETYPE:-tar};;a5ea764d-4f44-4e76-a6de-12b7ee5310b8;${FOUNDATION_URL:-https://github.com/MulleFoundation/Foundation/archive/${MULLE_BRANCH}.tar.gz};${FOUNDATION_BRANCH:-latest};;;
-Foundation-startup;none;no-all-load,no-build,no-cmakeinherit,no-delete,no-dependency,no-fs,no-import,no-share,no-update,only-startup;0F1D646D-A356-4CA6-9134-8B66DFD116D8;;;;;
+Foundation;${FOUNDATION_NODETYPE:-tar};no-singlephase;a5ea764d-4f44-4e76-a6de-12b7ee5310b8;${FOUNDATION_URL:-https://github.com/MulleFoundation/Foundation/archive/${MULLE_BRANCH}.tar.gz};${FOUNDATION_BRANCH:-latest};;;
+Foundation-startup;${FOUNDATION_STARTUP_NODETYPE:-tar};no-dynamic-link,no-header,no-import,no-intermediate-link;4A3ECF5B-83D4-4C76-A2E0-1177C5316A88;${FOUNDATION_STARTUP_URL:-https://github.com/MulleFoundation/Foundation-startup/archive/${MULLE_BRANCH}.tar.gz};${FOUNDATION_STARTUP_BRANCH:-latest};;;

@@ -1,0 +1,14 @@
+# -- Formula Info --
+# If you don't have this file, there will be no homebrew
+# formula operations.
+#
+PROJECT="<|PROJECT_NAME|>"        # your project/repository name
+DESC="<|PROJECT_NAME|> is a project of sorts"
+LANGUAGE="<|PROJECT_LANGUAGE|>"  # c,cpp, objc, bash ...
+# NAME="${PROJECT}"        # formula filename without .rb extension
+
+# OS X brew dependencies, newline separated
+#DEPENDENCIES=''
+
+# Debian dependencies, comma separated
+#DEBIAN_DEPENDENCIES=""

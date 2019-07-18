@@ -1,0 +1,13 @@
+PUBLISHER="You"
+PUBLISHER_TAP="your_github_name/homebrew_repo"
+PUBLISHER_FULLNAME="You in detail"
+PUBLISHER_EMAIL="You <you@your.domain.tl>"
+PUBLISHER_DOMAIN="your.domain"
+
+#
+# derivable stuff for Debian
+# Which you will have to set up yourself
+# https://www.maxoberberger.net/blog/2013/05/creating-your-own-apt-repository.html
+#
+PUBLISHER_PUBLICKEY_URL="https://www.${PUBLISHER_DOMAIN}/dists/pubkey.asc"
+PUBLISHER_DEBIAN_URL="https://www.${PUBLISHER_DOMAIN}"

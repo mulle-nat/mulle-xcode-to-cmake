@@ -2,6 +2,7 @@
 *.o
 build/
 Build/
+kitchen/
 xcuserdata/
 project.xcworkspace/
 mulle-xcode-settings.xcodeproj/nat.pbxuser

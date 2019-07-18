@@ -1,3 +1,12 @@
+## 0.9.0
+
+* improved collection of localized resources
+* modernized the emitted CMakeLists.txt for mulle-objc 0.16
+* fix mulle-sde project
+* update README install instructions
+* fix incorrect group relative paths
+
+
 ### 0.8.1
 
 * fix mulle-sde project
