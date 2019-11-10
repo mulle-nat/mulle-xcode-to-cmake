@@ -1028,7 +1028,7 @@ static void   export_target( PBXTarget *pbxtarget,
       printf( "\n"
               "set_target_properties( %s\n"
               "   PROPERTIES\n"
-              "   OUTPUT_NAME %s)\n"
+              "   OUTPUT_NAME %s\n"
               ")\n",
               ctxt3.s_target_name,
               ctxt.s_target_name);
