@@ -30,6 +30,10 @@ it yourself with Xcode:
 brew install mulle-kybernetik/software/mulle-xcode-to-cmake
 ```
 
+
+## Build
+
+
 ### MacOS / Linux / FreeBSD : mulle-objc
 
 Get [foundation-developer](//github.com/MulleFoundation/foundation-developer)
@@ -282,7 +286,6 @@ Coded by Nat!
 
 ### Contributors
 
-* [@RJVB](https://github.com/RJVB) GNUstep
-* [@ElMostafaIdrassi](https://github.com/ElMostafaIdrassi) GNUstep WIN
-* [@saxbophone](https://github.com/saxbophone) Bugreports
+[Contributors](https://github.com/mulle-nat/mulle-xcode-to-cmake/graphs/contributors)
+
 
