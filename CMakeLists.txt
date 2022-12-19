@@ -6,6 +6,7 @@ project( mulle-xcode-to-cmake C)
 
 cmake_minimum_required (VERSION 3.4)
 
+set( CURRENT_PROJECT_VERSION "0.9.1")
 
 # check if compiling with mulle-sde
 
@@ -182,6 +183,10 @@ ${MULLE_XCODE_TO_CMAKE_PUBLIC_HEADERS}
 ${MULLE_XCODE_TO_CMAKE_PROJECT_HEADERS}
 ${MULLE_XCODE_TO_CMAKE_PRIVATE_HEADERS}
 ${MULLE_XCODE_TO_CMAKE_RESOURCES}
+)
+
+target_compile_definitions(  mulle-xcode-to-cmake PUBLIC
+   CURRENT_PROJECT_VERSION=${CURRENT_PROJECT_VERSION}
 )
 
 target_include_directories( mulle-xcode-to-cmake
