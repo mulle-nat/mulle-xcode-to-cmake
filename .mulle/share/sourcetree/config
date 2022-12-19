@@ -1,0 +1,2 @@
+Foundation;tar;no-singlephase;90F79CF7-182B-4FC3-BC9B-183673C8B76F;${FOUNDATION_URL:-https://github.com/MulleFoundation/Foundation/archive/${MULLE_TAG}.tar.gz};;${FOUNDATION_TAG:-latest};;
+Foundation-startup;tar;no-cmake-dependency,no-cmake-loader,no-cmake-searchpath,no-dynamic-link,no-header,no-intermediate-link;2F3ABBBC-A0F5-4692-BC73-1B2A4C387CC6;${FOUNDATION__STARTUP_URL:-https://github.com/MulleFoundation/Foundation-startup/archive/${MULLE_TAG}.tar.gz};;${FOUNDATION__STARTUP_TAG:-latest};;

@@ -12,28 +12,40 @@ cmake_minimum_required (VERSION 3.4)
 set( FIND_FOUNDATION_LIBRARY ON) # default
 
 if( NOT DEPENDENCY_DIR)
-   set( DEPENDENCY_DIR "${PROJECT_SOURCE_DIR}/dependency")
+   set( DEPENDENCY_DIR "$ENV{DEPENDENCY_DIR}")
+   if( NOT DEPENDENCY_DIR)
+      set( DEPENDENCY_DIR "${PROJECT_SOURCE_DIR}/dependency")
+   endif()
 endif()
 
 if( EXISTS "${DEPENDENCY_DIR}")
    if( NOT ADDICTION_DIR)
-      set( ADDICTION_DIR "${PROJECT_SOURCE_DIR}/addiction")
+      set( ADDICTION_DIR "$ENV{ADDICTION_DIR}")
+      if( NOT ADDICTION_DIR)
+         set( ADDICTION_DIR "${PROJECT_SOURCE_DIR}/addiction")
+      endif()
    endif()
 
    set( CMAKE_FIND_FRAMEWORK "LAST")
 
    include_directories( BEFORE SYSTEM
+   ${DEPENDENCY_DIR}/${CMAKE_BUILD_TYPE}/include
+   ${DEPENDENCY_DIR}/Release/include
    ${DEPENDENCY_DIR}/include
    ${ADDICTION_DIR}/include
    )
 
    set( CMAKE_FRAMEWORK_PATH
+   ${DEPENDENCY_DIR}/${CMAKE_BUILD_TYPE}/Frameworks
+   ${DEPENDENCY_DIR}/Release/Frameworks
    ${DEPENDENCY_DIR}/Frameworks
    ${ADDICTION_DIR}/Frameworks
    ${CMAKE_FRAMEWORK_PATH}
    )
 
    set( CMAKE_LIBRARY_PATH
+   ${DEPENDENCY_DIR}/${CMAKE_BUILD_TYPE}/Frameworks
+   ${DEPENDENCY_DIR}/Release/Frameworks
    ${DEPENDENCY_DIR}/lib
    ${ADDICTION_DIR}/lib
    ${CMAKE_LIBRARY_PATH}

@@ -1,5 +1,6 @@
 mulle-clang
-mulle-lldb;optional
+mulle-scan-build;optional
+mulle-gdb;optional
 cmake;optional
 mulle-cmake-graphviz-include;optional
 mulle-create-build-motd;optional

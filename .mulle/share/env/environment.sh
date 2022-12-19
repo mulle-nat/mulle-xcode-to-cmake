@@ -7,26 +7,6 @@
 # If mulle-env is broken, sometimes its nice just to source this file.
 # If you're sourcing this manually on a regular basis, you're doing it wrong.
 #
-# We need some minimal stuff to get things going though:
-#     sed, cut, tr, hostname, pwd, uname
-#
-if [ -z "${MULLE_UNAME}" ]
-then
-   MULLE_UNAME="`PATH=/bin:/usr/bin uname | \
-                  PATH=/bin:/usr/bin cut -d_ -f1 | \
-                  PATH=/bin:/usr/bin sed 's/64$//' | \
-                  PATH=/bin:/usr/bin tr 'A-Z' 'a-z'`"
-   export MULLE_UNAME
-fi
-if [ -z "${MULLE_HOSTNAME}" ]
-then
-   MULLE_HOSTNAME="`PATH=/bin:/usr/bin:/sbin:/usr/sbin hostname -s`"
-   if [ "${MULLE_HOSTNAME:0:1}" = '.' ]
-   then
-      MULLE_HOSTNAME="_${MULLE_HOSTNAME}"
-   fi
-   export MULLE_HOSTNAME
-fi
 if [ -z "${MULLE_VIRTUAL_ROOT}" ]
 then
    MULLE_VIRTUAL_ROOT="`PATH=/bin:/usr/bin pwd -P`"
@@ -73,21 +53,31 @@ case "${MULLE_SHELL_MODE}" in
 
       alias mulle-env-reload='. "${MULLE_VIRTUAL_ROOT}/.mulle/share/env/include-environment.sh"'
 
-
       #
       # source in any bash completion files
       #
       DEFAULT_IFS="${IFS}"
-      shopt -s nullglob; IFS=$'\n'
+      IFS=$'\n'
+      # memo: nullglob not easily done on both bash and zsh
       for FILENAME in "${MULLE_VIRTUAL_ROOT}/.mulle/share/env/libexec"/*-bash-completion.sh
       do
-         . "${FILENAME}"
+         if [ -f "${FILENAME}" ]
+         then
+            . "${FILENAME}"
+         fi
       done
-      shopt -u nullglob; IFS="${DEFAULT_IFS}"
+      IFS="${DEFAULT_IFS}"
 
-      unset FILENAME
       unset DEFAULT_IFS
+      unset FILENAME
 
+      vardir="${MULLE_VIRTUAL_ROOT}/.mulle/var/${MULLE_HOSTNAME}"
+      [ -d "${vardir}" ] || mkdir -p "${vardir}"
+
+      HISTFILE="${vardir}/bash_history"
+      export HISTFILE
+
+      unset vardir
 
       #
       # show motd, if any
@@ -132,9 +122,9 @@ case "${MULLE_SHELL_MODE}" in
          alias log="mulle-sde log"
          alias match="mulle-sde match"
          alias monitor="mulle-sde monitor"
+         alias reflect="mulle-sde reflect"
          alias patternfile="mulle-sde patternfile"
          alias subproject="mulle-sde subproject"
-         alias update="mulle-sde update"
       fi
 
       if [ -z "" ]
@@ -145,9 +135,9 @@ case "${MULLE_SHELL_MODE}" in
          alias t="mulle-sde test rerun --serial"
          alias tt="mulle-sde test craft ; mulle-sde test rerun --serial"
          alias T="mulle-sde test craft ; mulle-sde test"
-         alias TT="mulle-sde test clean ; mulle-sde test"
-         alias u="mulle-sde update"
-         alias l="mulle-sde list"
+         alias TT="mulle-sde test clean all; mulle-sde test"
+         alias r="mulle-sde reflect"
+         alias l="mulle-sde list --files"
       fi
    ;;
 esac

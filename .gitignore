@@ -51,3 +51,4 @@ src/PBXSupport/
 mulle-project/
 generate-brew-formula.sh
 .mullex/
+*.old
