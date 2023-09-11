@@ -13,9 +13,9 @@ frameworks.
 > Xcode to cmake, use [mulle-sde](https://github.com/mulle-sde/mulle-sde).
 
 
-Fork      |  Build Status | Master Version
-----------|---------------|-----------------------------------
-[Mulle kybernetiK](//github.com/mulle-nat/mulle-xcode-to-cmake) | [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake) | ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-nat/mulle-xcode-to-cmake.svg) [![Build Status](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake.svg?branch=master)](https://travis-ci.org/mulle-nat/mulle-xcode-to-cmake)
+|  Build Status | Version
+|---------------|-----------------------------------
+| [![CI](https://github.com/mulle-nat/mulle-xcode-to-cmake/actions/workflows/mulle-sde-ci.yml/badge.svg?branch=release)](https://github.com/mulle-nat/mulle-xcode-to-cmake/actions/workflows/mulle-sde-ci.yml) | ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-nat/mulle-xcode-to-cmake.svg) 
 
 
 ## Install
